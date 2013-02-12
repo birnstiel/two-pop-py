@@ -4,10 +4,10 @@ from matplotlib.mlab import find
 from matplotlib.pyplot import semilogx,xlim,ylim,figure
 from uTILities import progress_bar,tridag
 
-def two_pop_model_run_ic(x,a_0,time,sig_g,sig_d,v_gas,T,alpha,m_star,V_FRAG,RHO_S,peak_position,E_drift):
+def two_pop_model_run_ic(x,a_0,time,sig_g,sig_d,v_gas,T,alpha,m_star,V_FRAG,RHO_S,peak_position,E_drift,nogrowth=False):
     """
     this function evolves the two population model (all model settings
-    are stored in two_pop_velocity.m). It returns the important parameters of
+    are stored in two_pop_velocity). It returns the important parameters of
     the model.
     
     USAGE:
@@ -28,17 +28,20 @@ def two_pop_model_run_ic(x,a_0,time,sig_g,sig_d,v_gas,T,alpha,m_star,V_FRAG,RHO_
         RHO_S           = internal density of the dust    [g cm^-3]
         peak_position   = index to level off the velocity [-]
         E_drift         = drift efficiency                [-]
+        
+    KEYWORDS:
+        nogrowth        = true: particle size fixed to a0 [False]
     
     RETURNS:
-        time     = snap shot time           (nt,nr)         [s]
-        solution = dust surface density     (nt,nr)         [g cm^-2]
-        v_bar    = dust velocity            (nt,nr)         [cm s^-1]
-        v_0      = small dust velocity      (nt,nr)         [cm s^-1]
-        v_1      = large dust velocity      (nt,nr)         [cm s^-1]
-        a_dr     = drift size limit         (nt,nr)         [cm]
-        a_fr     = fragmentation size limit (nt,nr)         [cm]
-        a_df     = drift-ind. frag. limit   (nt,nr)         [cm]
-        a_t      = the time dependent limit (nt,nr)         [cm]
+        time     = snap shot time           (nt,nr)       [s]
+        solution = dust surface density     (nt,nr)       [g cm^-2]
+        v_bar    = dust velocity            (nt,nr)       [cm s^-1]
+        v_0      = small dust velocity      (nt,nr)       [cm s^-1]
+        v_1      = large dust velocity      (nt,nr)       [cm s^-1]
+        a_dr     = drift size limit         (nt,nr)       [cm]
+        a_fr     = fragmentation size limit (nt,nr)       [cm]
+        a_df     = drift-ind. frag. limit   (nt,nr)       [cm]
+        a_t      = the time dependent limit (nt,nr)       [cm]
     """
     #
     # constants
@@ -81,7 +84,7 @@ def two_pop_model_run_ic(x,a_0,time,sig_g,sig_d,v_gas,T,alpha,m_star,V_FRAG,RHO_
     #
     # save the velocity which will be used
     #
-    res  = two_pop_velocity_nointerp(t,solution[0,:],x,sig_g,v_gas,T,alpha,m_star,a_0,V_FRAG,RHO_S,peak_position,E_drift)
+    res  = two_pop_velocity_nointerp(t,solution[0,:],x,sig_g,v_gas,T,alpha,m_star,a_0,V_FRAG,RHO_S,peak_position,E_drift,nogrowth=nogrowth)
     v_bar[0,:] = res[0]
     Diff[0,:]  = res[1]
     v_0[0,:]   = res[3]
@@ -109,7 +112,7 @@ def two_pop_model_run_ic(x,a_0,time,sig_g,sig_d,v_gas,T,alpha,m_star,V_FRAG,RHO_
         #
         # calculate the velocity
         #
-        res   = two_pop_velocity_nointerp(t,u_in/x,x,sig_g,v_gas,T,alpha,m_star,a_0,V_FRAG,RHO_S,peak_position,E_drift)
+        res   = two_pop_velocity_nointerp(t,u_in/x,x,sig_g,v_gas,T,alpha,m_star,a_0,V_FRAG,RHO_S,peak_position,E_drift,nogrowth=nogrowth)
         v     = res[0]
         D     = res[1]
         sig_g = res[2]
@@ -194,10 +197,10 @@ def two_pop_model_run_ic(x,a_0,time,sig_g,sig_d,v_gas,T,alpha,m_star,V_FRAG,RHO_
 
     return [time,solution,v_bar,v_0,v_1,a_dr,a_fr,a_df,a_t]
 
-def two_pop_model_run(x_1,a_0,timesteps_1,sigma_g_1,sigma_d_1,v_gas_1,T_1,alpha_1,m_star_1,T_COAG_START,V_FRAG,RHO_S,peak_position_1,E_drift,plotting=False):
+def two_pop_model_run(x_1,a_0,timesteps_1,sigma_g_1,sigma_d_1,v_gas_1,T_1,alpha_1,m_star_1,T_COAG_START,V_FRAG,RHO_S,peak_position_1,E_drift,plotting=False,nogrowth=False):
     """
     this function evolves the two population model (all model settings
-    are stored in two_pop_velocity.m). It returns the important parameters of
+    are stored in two_pop_velocity). It returns the important parameters of
     the model.
     
     USAGE:
@@ -276,7 +279,7 @@ def two_pop_model_run(x_1,a_0,timesteps_1,sigma_g_1,sigma_d_1,v_gas_1,T_1,alpha_
     #
     # save the velocity which will be used
     #
-    res  = two_pop_velocity(t,solution[0,:],x_1,timesteps_1,sigma_g_1,v_gas_1,T_1,alpha_1,m_star_1,a_0,T_COAG_START,V_FRAG,RHO_S,peak_position_1,E_drift)
+    res  = two_pop_velocity(t,solution[0,:],x_1,timesteps_1,sigma_g_1,v_gas_1,T_1,alpha_1,m_star_1,a_0,T_COAG_START,V_FRAG,RHO_S,peak_position_1,E_drift,nogrowth=nogrowth)
     v_bar[0,:] = res[0]
     Diff[0,:]  = res[1]
     v_0[0,:]   = res[3]
@@ -304,7 +307,7 @@ def two_pop_model_run(x_1,a_0,timesteps_1,sigma_g_1,sigma_d_1,v_gas_1,T_1,alpha_
         #
         # calculate the velocity
         #
-        res   = two_pop_velocity(t,u_in/x_1,x_1,timesteps_1,sigma_g_1,v_gas_1,T_1,alpha_1,m_star_1,a_0,T_COAG_START,V_FRAG,RHO_S,peak_position_1,E_drift)
+        res   = two_pop_velocity(t,u_in/x_1,x_1,timesteps_1,sigma_g_1,v_gas_1,T_1,alpha_1,m_star_1,a_0,T_COAG_START,V_FRAG,RHO_S,peak_position_1,E_drift,nogrowth=nogrowth)
         v     = res[0]
         D     = res[1]
         sig_g = res[2]
@@ -453,13 +456,15 @@ def two_pop_velocity_nointerp(t,sigma_d_t,x,sigma_g,v_gas,T,alpha,m_star,a_0,V_F
     #
     # calculate the sizes
     #
+    o_k         = sqrt(Grav*m_star/x**3)
     if nogrowth:
-        a_max     = a_0*ones(n_r)
-        a_max_t   = a_max
-        a_max_out = a_max
-        a_fr      = a_max
-        a_dr      = a_max
-        a_df      = a_max
+        mask        = ones(n_r)==1
+        a_max       = a_0*ones(n_r)
+        a_max_t     = a_max
+        a_max_t_out = a_max
+        a_fr        = a_max
+        a_dr        = a_max
+        a_df        = a_max
     else:
         a_fr  = fudge_fr*2*sigma_g*V_FRAG**2/(3*pi*alpha*RHO_S*k_b*T/mu/m_p)
         a_dr  = fudge_dr/E_drift*2/pi*sigma_d_t/RHO_S*x**2*(Grav*m_star/x**3)/(abs(gamma)*(k_b*T/mu/m_p))
@@ -476,7 +481,6 @@ def two_pop_velocity_nointerp(t,sigma_d_t,x,sigma_g,v_gas,T,alpha,m_star,a_0,V_F
         #
         # calculate the growth time scale and thus a_1(t)
         #
-        o_k         = sqrt(Grav*m_star/x**3)
         tau_grow    = sigma_g/maximum(1e-100,sigma_d_t*o_k)
         a_max_t     = minimum(a_max,a_0*exp(minimum(709.0,t/tau_grow)))
         a_max_t_out = minimum(a_max_out,a_0*exp(minimum(709.0,t/tau_grow)))
@@ -516,7 +520,7 @@ def two_pop_velocity_nointerp(t,sigma_d_t,x,sigma_g,v_gas,T,alpha,m_star,a_0,V_F
     
     return [v_bar,D,sigma_g,v_0,v_1,a_max_t_out,a_df,a_fr,a_dr]
 
-def two_pop_velocity(t,sigma_d_t,x_1,timesteps_1,sigma_g_1,v_gas_1,T_1,alpha_1,m_star_1,a_0,T_COAG_START,V_FRAG,RHO_S,peak_position_1,E_drift):
+def two_pop_velocity(t,sigma_d_t,x_1,timesteps_1,sigma_g_1,v_gas_1,T_1,alpha_1,m_star_1,a_0,T_COAG_START,V_FRAG,RHO_S,peak_position_1,E_drift,nogrowth=False):
     """
     This model takes the full (n_t,n_r) grid of temperature, gas surface
     density and so on and calculates the time interpolated values of the
@@ -543,7 +547,10 @@ def two_pop_velocity(t,sigma_d_t,x_1,timesteps_1,sigma_g_1,v_gas_1,T_1,alpha_1,m
         V_FRAG       = fragmentation velocity                 [cm s^-1]
         RHO_S        = dust internal density                  [g cm^-3]
         E_drift      = drift efficiency                       [-]
-    
+        
+    KEYWORD:
+        nogrowth     = wether a fixed particle size is used   [False]    
+        
     RETURNS:
         v_bar        = the mass averaged velocity (nt,nr)         [cm s^-1]
         D            = t-interpolated diffusivity (nt,nr)         [cm^2 s^-1]
@@ -609,28 +616,36 @@ def two_pop_velocity(t,sigma_d_t,x_1,timesteps_1,sigma_g_1,v_gas_1,T_1,alpha_1,m
     # time interpolate it
     #
     gamma_i   = (1-eps)*gamma_o + eps*gamma_n
-    #
-    # calculate the sizes
-    #
-    a_fr  = fudge_fr*2*sigma_g_i*V_FRAG**2/(3*pi*alpha_i*RHO_S*k_b*T_i/mu/m_p)
-    a_dr  = fudge_dr/E_drift*2/pi*sigma_d_t/RHO_S*x_1**2*(Grav*m_star_i/x_1**3)/(abs(gamma_i)*(k_b*T_i/mu/m_p))
-    N     = 0.5
-    a_df  = fudge_fr*2*sigma_g_i/(RHO_S*pi)*V_FRAG*sqrt(Grav*m_star_i/x_1)/(abs(gamma_i)*k_b*T_i/mu/m_p*(1-N))
-    a_max = maximum(a_0*ones(n_r),minimum(a_dr,a_fr))
-    ###
-    # EXPERIMENTAL: inlcude a_df as upper limit
-    a_max     = maximum(a_0*ones(n_r),minimum(a_df,a_max))
-    a_max_out = minimum(a_df,a_max)
-    #mask      = all([a_dr<a_fr,a_dr<a_df],0)
-    mask = array([adr<afr and adr<adf for adr,afr,adf in zip(a_dr,a_fr,a_df)])
-    ###
-    #
-    # calculate the growth time scale and thus a_1(t)
-    #
-    o_k         = sqrt(Grav*m_star_i/x_1**3)
-    tau_grow    = sigma_g_i/maximum(1e-100,sigma_d_t*o_k)
-    a_max_t     = minimum(a_max,a_0*exp(minimum(709.0,(t-T_COAG_START)/tau_grow)))
-    a_max_t_out = minimum(a_max_out,a_0*exp(minimum(709.0,(t-T_COAG_START)/tau_grow)))
+    if nogrowth:
+        a_max       = a_0*ones(n_r)
+        a_max_t     = a_max
+        a_max_t_out = a_max
+        a_fr        = a_max
+        a_dr        = a_max
+        a_df        = a_max
+    else:
+        #
+        # calculate the sizes
+        #
+        a_fr  = fudge_fr*2*sigma_g_i*V_FRAG**2/(3*pi*alpha_i*RHO_S*k_b*T_i/mu/m_p)
+        a_dr  = fudge_dr/E_drift*2/pi*sigma_d_t/RHO_S*x_1**2*(Grav*m_star_i/x_1**3)/(abs(gamma_i)*(k_b*T_i/mu/m_p))
+        N     = 0.5
+        a_df  = fudge_fr*2*sigma_g_i/(RHO_S*pi)*V_FRAG*sqrt(Grav*m_star_i/x_1)/(abs(gamma_i)*k_b*T_i/mu/m_p*(1-N))
+        a_max = maximum(a_0*ones(n_r),minimum(a_dr,a_fr))
+        ###
+        # EXPERIMENTAL: inlcude a_df as upper limit
+        a_max     = maximum(a_0*ones(n_r),minimum(a_df,a_max))
+        a_max_out = minimum(a_df,a_max)
+        #mask      = all([a_dr<a_fr,a_dr<a_df],0)
+        mask = array([adr<afr and adr<adf for adr,afr,adf in zip(a_dr,a_fr,a_df)])
+        ###
+        #
+        # calculate the growth time scale and thus a_1(t)
+        #
+        o_k         = sqrt(Grav*m_star_i/x_1**3)
+        tau_grow    = sigma_g_i/maximum(1e-100,sigma_d_t*o_k)
+        a_max_t     = minimum(a_max,a_0*exp(minimum(709.0,(t-T_COAG_START)/tau_grow)))
+        a_max_t_out = minimum(a_max_out,a_0*exp(minimum(709.0,(t-T_COAG_START)/tau_grow)))
     #
     # calculate the Stokes number of the particles
     #
