@@ -1,8 +1,9 @@
-import widget,sys
+from utilities import plotter, progress_bar, tridag
 from numpy import ones,zeros,shape,arange,Inf,maximum,minimum,exp,array,sqrt,invert
 from matplotlib.mlab import find
 from matplotlib.pyplot import semilogx,xlim,ylim,figure
-from uTILities import progress_bar,tridag
+
+import sys
 
 def two_pop_model_run_ic(x,a_0,time,sig_g,sig_d,v_gas,T,alpha,m_star,V_FRAG,RHO_S,peak_position,E_drift,nogrowth=False):
     """
@@ -184,7 +185,7 @@ def two_pop_model_run_ic(x,a_0,time,sig_g,sig_d,v_gas,T,alpha,m_star,V_FRAG,RHO_
         #
         # plot the solution
         #
-        widget.plotter(x=x/AU,
+        plotter(x=x/AU,
                        data=solution,
                        times=time/year,
                        xlog=1,
@@ -231,7 +232,6 @@ def two_pop_model_run(x_1,a_0,timesteps_1,sigma_g_1,sigma_d_1,v_gas_1,T_1,alpha_
     #
     # constants
     #
-    plotting  = 0
     AU        = 1.496e13			# astronomical unit in cm
     year      = 31558149.54e0		# year in s
     #
@@ -380,7 +380,7 @@ def two_pop_model_run(x_1,a_0,timesteps_1,sigma_g_1,sigma_d_1,v_gas_1,T_1,alpha_
         #
         # plot the solution
         #
-        widget.plotter(x=x_1/AU,
+        plotter(x=x_1/AU,
                        data=solution,
                        data2=sigma_d_total[it0:,:],
                        times=timesteps_1[it0:]/year,
