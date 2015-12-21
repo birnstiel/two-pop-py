@@ -34,7 +34,6 @@ E_drift       = 1.0         # drift fudge factor
 x             = np.logspace(np.log10(0.05),np.log10(4e3),n_r)*AU
 timesteps     = np.logspace(4,np.log10(3e6),n_t)*year
 T             = ( (0.05**0.25*T_star * (x/R_star)**-0.5)**4 + 1e4)**0.25
-peak_position = np.zeros(n_t)
 #
 # set the initial surface density & velocity
 #
@@ -44,7 +43,7 @@ v_gas       = -3.0*alpha*k_b*T/mu/m_p/2./np.sqrt(Grav*M_star/x)*(1.+7./4.)
 #
 # call the model
 #
-[TI,SOLD,SOLG,VD,VG,v_0,v_1,a_dr,a_fr,a_df,a_t] = two_pop_model_run(x,a_0,timesteps,sigma_g,sigma_d,v_gas,T,alpha*np.ones(n_r),M_star,V_FRAG,RHO_S,peak_position,E_drift,nogrowth=False)
+[TI,SOLD,SOLG,VD,VG,v_0,v_1,a_dr,a_fr,a_df,a_t] = two_pop_model_run(x,a_0,timesteps,sigma_g,sigma_d,v_gas,T,alpha*np.ones(n_r),M_star,V_FRAG,RHO_S,E_drift,nogrowth=False)
 #
 # remove the line which shouldn't be there (I should fix this)
 #         

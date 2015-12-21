@@ -1,4 +1,4 @@
-def two_pop_model_run(x,a_0,time,sig_g,sig_d,v_gas,T,alpha,m_star,V_FRAG,RHO_S,peak_position,E_drift,nogrowth=False):
+def two_pop_model_run(x,a_0,time,sig_g,sig_d,v_gas,T,alpha,m_star,V_FRAG,RHO_S,E_drift,nogrowth=False):
     """
     This function evolves the two population model (all model settings
     are stored in two_pop_velocity). It returns the important parameters of
@@ -6,7 +6,7 @@ def two_pop_model_run(x,a_0,time,sig_g,sig_d,v_gas,T,alpha,m_star,V_FRAG,RHO_S,p
     
     USAGE:
     [time,solution_d,solution_g,v_bar,v_0,v_1,a_dr,a_fr,a_df,a_t]  =  two_pop_model_run_ic ...
-    (x,a_0,time,sig_g,sig_d,v_gas,T,alpha,m_star,V_FRAG,RHO_S,peak_position,E_drift):
+    (x,a_0,time,sig_g,sig_d,v_gas,T,alpha,m_star,V_FRAG,RHO_S,E_drift):
     
     WHERE:
         x               = radial grid (nr)                [cm]
@@ -20,7 +20,6 @@ def two_pop_model_run(x,a_0,time,sig_g,sig_d,v_gas,T,alpha,m_star,V_FRAG,RHO_S,p
         m_star          = stellar mass (nt)               [g]
         V_FRAG          = fragmentation velocity          [cm s^-1]
         RHO_S           = internal density of the dust    [g cm^-3]
-        peak_position   = index to level off the velocity [-]
         E_drift         = drift efficiency                [-]
         
     KEYWORDS:
@@ -82,7 +81,7 @@ def two_pop_model_run(x,a_0,time,sig_g,sig_d,v_gas,T,alpha,m_star,V_FRAG,RHO_S,p
     #
     # save the velocity which will be used
     #
-    res  = two_pop_velocity(t,solution_d[0,:],x,sig_g,v_gas,T,alpha,m_star,a_0,V_FRAG,RHO_S,peak_position,E_drift,nogrowth=nogrowth)
+    res  = two_pop_velocity(t,solution_d[0,:],x,sig_g,v_gas,T,alpha,m_star,a_0,V_FRAG,RHO_S,E_drift,nogrowth=nogrowth)
     v_bar[0,:] = res[0]
     Diff[0,:]  = res[1]
     v_0[0,:]   = res[3]
@@ -110,7 +109,7 @@ def two_pop_model_run(x,a_0,time,sig_g,sig_d,v_gas,T,alpha,m_star,V_FRAG,RHO_S,p
         #
         # calculate the velocity
         #
-        res    = two_pop_velocity(t,u_in/x,x,sig_g,v_gas,T,alpha,m_star,a_0,V_FRAG,RHO_S,peak_position,E_drift,nogrowth=nogrowth)
+        res    = two_pop_velocity(t,u_in/x,x,sig_g,v_gas,T,alpha,m_star,a_0,V_FRAG,RHO_S,E_drift,nogrowth=nogrowth)
         v      = res[0]
         D      = res[1]
         sig_g  = res[2]
@@ -201,7 +200,7 @@ def two_pop_model_run(x,a_0,time,sig_g,sig_d,v_gas,T,alpha,m_star,V_FRAG,RHO_S,p
     return [time,solution_d,solution_g,v_bar,vgas,v_0,v_1,a_dr,a_fr,a_df,a_t]
 
 
-def two_pop_velocity(t,sigma_d_t,x,sigma_g,v_gas,T,alpha,m_star,a_0,V_FRAG,RHO_S,peak_position,E_drift,nogrowth=False):
+def two_pop_velocity(t,sigma_d_t,x,sigma_g,v_gas,T,alpha,m_star,a_0,V_FRAG,RHO_S,E_drift,nogrowth=False):
     """
     This model takes a snapshot of temperature, gas surface density and so on
     and calculates values of the representative sizes and velocities which are
@@ -209,7 +208,7 @@ def two_pop_velocity(t,sigma_d_t,x,sigma_g,v_gas,T,alpha,m_star,a_0,V_FRAG,RHO_S
     
     USAGE:
     [v_bar,D,sigma_g_i,v_0,v_1,a_max_t,a_df,a_fr,a_dr] = ...
-    two_pop_velocity(t,sigma_d_t,x,sigma_g,v_gas,T,alpha,m_star,a_0,V_FRAG,RHO_S,peak_position,E_drift)
+    two_pop_velocity(t,sigma_d_t,x,sigma_g,v_gas,T,alpha,m_star,a_0,V_FRAG,RHO_S,E_drift)
     
     WHERE:
         t            = time at which to calculate the values  [s]
@@ -306,7 +305,6 @@ def two_pop_velocity(t,sigma_d_t,x,sigma_g,v_gas,T,alpha,m_star,a_0,V_FRAG,RHO_S
     #
     # level of at the peak position
     #
-    v_dr[0:peak_position] = v_dr[peak_position-1]
     v_0 = v_0 + 2/(St_0+1/St_0)*v_dr
     v_1 = v_1 + 2/(St_1+1/St_1)*v_dr
     #
