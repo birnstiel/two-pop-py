@@ -84,12 +84,12 @@ def two_pop_model_run(x,a_0,time,sig_g,sig_d,v_gas,T,alpha,m_star,V_FRAG,RHO_S,E
     res  = two_pop_velocity(t,solution_d[0,:],x,sig_g,v_gas,T,alpha,m_star,a_0,V_FRAG,RHO_S,E_drift,nogrowth=nogrowth)
     v_bar[0,:] = res[0]
     Diff[0,:]  = res[1]
-    v_0[0,:]   = res[3]
-    v_1[0,:]   = res[4]
-    a_t[0,:]   = res[5]
-    a_df[0,:]  = res[6]
-    a_fr[0,:]  = res[7]
-    a_dr[0,:]  = res[8]
+    v_0[0,:]   = res[2]
+    v_1[0,:]   = res[3]
+    a_t[0,:]   = res[4]
+    a_df[0,:]  = res[5]
+    a_fr[0,:]  = res[6]
+    a_dr[0,:]  = res[7]
     #
     # the loop
     #
@@ -112,7 +112,6 @@ def two_pop_model_run(x,a_0,time,sig_g,sig_d,v_gas,T,alpha,m_star,V_FRAG,RHO_S,E
         res    = two_pop_velocity(t,u_in/x,x,sig_g,v_gas,T,alpha,m_star,a_0,V_FRAG,RHO_S,E_drift,nogrowth=nogrowth)
         v      = res[0]
         D      = res[1]
-        sig_g  = res[2]
         v[0]   = v[1]
         D[0]   = D[1]
         D[-2:] = 0
@@ -153,17 +152,18 @@ def two_pop_model_run(x,a_0,time,sig_g,sig_d,v_gas,T,alpha,m_star,V_FRAG,RHO_S,E
         h_gas      = ones(n_r)
         K_gas      = zeros(n_r)
         L_gas      = zeros(n_r)
-        u_gas      =  impl_donorcell_adv_diff_delta(n_r,x,D_gas,v_gas,g_gas,h_gas,K_gas,L_gas,flim,u_gas,dt,1,0,0,1,sig_g[2],1e-100*x[n_r],1,A0,B0,C0,D0)
+        u_gas      =  impl_donorcell_adv_diff_delta(n_r,x,D_gas,v_gas,g_gas,h_gas,K_gas,L_gas,flim,u_gas,dt,1.0,0.0,0.0,1.0,sig_g[1],1e-100*x[n_r-1],1,A0,B0,C0,D0)
         sig_g      = u_gas/x
+        sig_g      = maximum(sig_g,1e-100)
         #
         # now get the gas velocities from the exact fluxes
         #
         u_flux          = zeros(n_r)
-        u_flux[1:n_r+1] = - flim[1:n_r+1]*0.25*(D_gas[1:n_r+1]+D_gas[0:n_r]) * (h_gas[1:n_r+1]+h_gas[0:n_r]) * (g_gas[1:n_r+1]/h_gas[1:n_r+1]*u_gas[1:n_r+1]-g_gas[0:n_r]/h_gas[0:n_r]*u_gas[0:n_r]) / (x[1:n_r+1]-x[0:n_r])
+        u_flux[1:n_r+1] = - flim[1:n_r+1]*0.25*(D_gas[1:]+D_gas[:-1]) * (h_gas[1:]+h_gas[:-1]) * (g_gas[1:]/h_gas[1]*u_gas[1:]-g_gas[:-1]/h_gas[:-1]*u_gas[:-1]) / (x[1:]-x[:-1])
         mask            = u_flux>0.0
         imask           = u_flux<=0.0
-        v_gas[mask]      = u_flux[mask] /u_gas[maximum(0,    where(mask) [0]-1)]
-        v_gas[imask]     = u_flux[imask]/u_gas[minimum(n_r-1,where(imask)[0]+1)]
+        v_gas[mask]     = u_flux[mask] /u_gas[maximum(0,    where(mask) [0]-1)]
+        v_gas[imask]    = u_flux[imask]/u_gas[minimum(n_r-1,where(imask)[0]+1)]
         #
         # find out if we reached a snapshot
         #
@@ -188,12 +188,12 @@ def two_pop_model_run(x,a_0,time,sig_g,sig_d,v_gas,T,alpha,m_star,V_FRAG,RHO_S,E
             #
             # store the rest
             #
-            v_0[snap_count,:]   = res[3]
-            v_1[snap_count,:]   = res[4]
-            a_t[snap_count,:]   = res[5]
-            a_df[snap_count,:]  = res[6]
-            a_fr[snap_count,:]  = res[7]
-            a_dr[snap_count,:]  = res[8]
+            v_0[snap_count,:]   = res[2]
+            v_1[snap_count,:]   = res[3]
+            a_t[snap_count,:]   = res[4]
+            a_df[snap_count,:]  = res[5]
+            a_fr[snap_count,:]  = res[6]
+            a_dr[snap_count,:]  = res[7]
 
     progress_bar(100.,'toy model running')
 
@@ -207,7 +207,7 @@ def two_pop_velocity(t,sigma_d_t,x,sigma_g,v_gas,T,alpha,m_star,a_0,V_FRAG,RHO_S
     used in the two population model.
     
     USAGE:
-    [v_bar,D,sigma_g_i,v_0,v_1,a_max_t,a_df,a_fr,a_dr] = ...
+    [v_bar,D,v_0,v_1,a_max_t,a_df,a_fr,a_dr] = ...
     two_pop_velocity(t,sigma_d_t,x,sigma_g,v_gas,T,alpha,m_star,a_0,V_FRAG,RHO_S,E_drift)
     
     WHERE:
@@ -215,13 +215,12 @@ def two_pop_velocity(t,sigma_d_t,x,sigma_g,v_gas,T,alpha,m_star,a_0,V_FRAG,RHO_S
         sigma_d_t    = current dust surface density array (nr)[g cm^-2]
         x            = nr radial grid points (nr)             [cm]
         timesteps    = times of the snapshots (nt)            [s]
-        sigma_g      = gas surface density snapshots (nt,nr)  [g cm^-2]
-        v_gas        = gas radial velocity (nt,nr)            [cm s^-1]
-        T            = temperature snapshots (nt,nr)          [K]
-        alpha        = turbulence parameter (nt,nr)           [-]
-        m_star       = stellar mass (nt)                      [g]
+        sigma_g      = gas surface density (nr)               [g cm^-2]
+        v_gas        = gas radial velocity (nr)               [cm s^-1]
+        T            = temperature snapshots (nr)             [K]
+        alpha        = turbulence parameter (nr)              [-]
+        m_star       = stellar mass                           [g]
         a_0          = monomer size                           [cm]
-        T_COAG_START = time where coagulation starts          [s]
         V_FRAG       = fragmentation velocity                 [cm s^-1]
         RHO_S        = dust internal density                  [g cm^-3]
         E_drift      = drift efficiency                       [-]
@@ -232,7 +231,6 @@ def two_pop_velocity(t,sigma_d_t,x,sigma_g,v_gas,T,alpha,m_star,a_0,V_FRAG,RHO_S
     RETURNS:
         v_bar        = the mass averaged velocity (nt,nr)         [cm s^-1]
         D            = t-interpolated diffusivity (nt,nr)         [cm^2 s^-1]
-        sigma_g_i    = t-interpolated gas surface density (nt,nr) [g cm^-2]
         v_0          = t-interpolated vel. of small dust (nt,nr)  [cm s^-1]
         v_1          = t-interpolated vel. of large dust (nt,nr)  [cm s^-1]
         a_max_t      = maximum grain size (nt,nr)                 [cm]
@@ -320,7 +318,7 @@ def two_pop_velocity(t,sigma_d_t,x,sigma_g,v_gas,T,alpha,m_star,a_0,V_FRAG,RHO_S
     #
     D = alpha * k_b*T/mu/m_p/o_k
     
-    return [v_bar,D,sigma_g,v_0,v_1,a_max_t_out,a_df,a_fr,a_dr]
+    return [v_bar,D,v_0,v_1,a_max_t_out,a_df,a_fr,a_dr]
 
 
 def impl_donorcell_adv_diff_delta(n_x,x,Diff,v,g,h,K,L,flim,u_in,dt,pl,pr,ql,qr,rl,rr,coagulation_method,A,B,C,D):

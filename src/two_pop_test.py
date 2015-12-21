@@ -31,9 +31,11 @@ E_drift       = 1.0         # drift fudge factor
 #
 # create grids and temperature
 #
-x             = np.logspace(np.log10(0.05),np.log10(4e3),n_r)*AU
+n_ri          = n_r+1
+xi            = np.logspace(np.log10(0.05),np.log10(4e3),n_ri)*AU
+x             = 0.5*(xi[1:]+xi[:-1])
 timesteps     = np.logspace(4,np.log10(3e6),n_t)*year
-T             = ( (0.05**0.25*T_star * (x/R_star)**-0.5)**4 + 1e4)**0.25
+T             = ( (0.05**0.25*T_star * (x /R_star)**-0.5)**4 + 1e4)**0.25
 #
 # set the initial surface density & velocity
 #
@@ -77,7 +79,6 @@ np.savetxt(dirname+os.sep+'sigma_d.dat',SOLD)
 np.savetxt(dirname+os.sep+'x.dat',x)
 np.savetxt(dirname+os.sep+'T.dat',T)
 np.savetxt(dirname+os.sep+'time.dat',timesteps)
-np.savetxt(dirname+os.sep+'alpha.dat',alpha)
 np.savetxt(dirname+os.sep+'v_gas.dat',v_gas)
 np.savetxt(dirname+os.sep+'v_0.dat',v_0)
 np.savetxt(dirname+os.sep+'v_1.dat',v_1)
@@ -95,6 +96,7 @@ dummy('M_star'.ljust(strl)+('=\t%g'%(M_star)).ljust(strl)+'# stellar mass [M_sun
 dummy('RHO_S'.ljust(strl) +('=\t%g'%(RHO_S )).ljust(strl)+'# dust internal density [g cm^-3]\n')
 dummy('a_0'.ljust(strl)   +('=\t%g'%(a_0   )).ljust(strl)+'# size of smallest grains [cm]\n')
 dummy('mu'.ljust(strl)    +('=\t%g'%(mu    )).ljust(strl)+'# mean molecular weight [proton masses]\n')
+dummy('alpha'.ljust(strl) +('=\t%g'%(alpha )).ljust(strl)+'# alpha [-]\n')
 fid.close()
 
 plt.show()
