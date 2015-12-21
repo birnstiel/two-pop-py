@@ -3,3 +3,5 @@
 .settings/
 .pydevproject
 *.pyc
+distribution_reconstruction.py
+aux_functions.py

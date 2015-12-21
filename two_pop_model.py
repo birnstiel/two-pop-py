@@ -434,3 +434,20 @@ def impl_donorcell_adv_diff_delta(n_x,x,Diff,v,g,h,K,L,flim,u_in,dt,pl,pr,ql,qr,
         u_out = u_in+u2 # delta way
     
     return u_out
+
+distri_available=False
+try:
+    from distribution_reconstruction import reconstruct_size_distribution
+    distri_available=True
+except ImportError:
+    import os      as _os
+    import inspect as _inspect
+    import urllib  as _urllib
+    print('could not import distribution_reconstruction.py, will download it and retry')
+    _module_path = _os.path.dirname(_os.path.abspath(_inspect.getfile(_inspect.currentframe())))
+    for _file in ['distribution_reconstruction.py','aux_functions.py']:
+        _urllib.urlretrieve ('https://raw.githubusercontent.com/birnstiel/Birnstiel2015_scripts/master/'+_file,\
+                             _module_path+_os.sep+_file)
+    from distribution_reconstruction import reconstruct_size_distribution
+    distri_available=True
+    print('success!')
