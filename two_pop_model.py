@@ -243,8 +243,8 @@ def two_pop_velocity(t,sigma_d_t,x,sigma_g,v_gas,T,alpha,m_star,a_0,V_FRAG,RHO_S
     #
     # set some constants
     #
-    from constants import pi,k_b,mu,m_p,Grav
-    from numpy import ones,zeros,maximum,minimum,sqrt,array,exp,invert
+    from constants import k_b,mu,m_p,Grav
+    from numpy import ones,zeros,maximum,minimum,sqrt,array,exp,invert,pi
     n_r = len(x)
     #
     # calculate the pressure power-law index
@@ -354,7 +354,6 @@ def impl_donorcell_adv_diff_delta(n_x,x,Diff,v,g,h,K,L,flim,u_in,dt,pl,pr,ql,qr,
     
     """
     from numpy import zeros
-    from uTILities import tridag
     D05=zeros(n_x)
     h05=zeros(n_x)
     rhs=zeros(n_x)
@@ -434,6 +433,102 @@ def impl_donorcell_adv_diff_delta(n_x,x,Diff,v,g,h,K,L,flim,u_in,dt,pl,pr,ql,qr,
         u_out = u_in+u2 # delta way
     
     return u_out
+
+def tridag(a,b,c,r,n):
+    """
+    Solves a tridiagnoal matrix equation
+    
+    M * u  =  r
+    
+    where M is tridiagonal, and u and r are vectors of length n.
+    
+    Arguments:
+    ----------
+    
+    a : array
+    :    lower diagonal entries
+    
+    b : array
+    :    diagonal entries
+    
+    c : array
+    :    upper diagonal entries
+    
+    r : array
+    :    right hand side vector
+    
+    n : int
+    size of the vectors
+    
+    Returns:
+    --------
+    
+    u : array
+    :    solution vector
+    """
+    import numpy as np
+    
+    gam = np.zeros(n)
+    u   = np.zeros(n)
+    
+    if b[0]==0.:
+        raise ValueError('tridag: rewrite equations')
+    
+    bet = b[0]
+    
+    u[0]=r[0]/bet
+    
+    for j in np.arange(1,n):
+        gam[j] = c[j-1]/bet
+        bet    = b[j]-a[j]*gam[j]
+        
+        if bet==0:
+            raise ValueError('tridag failed')
+        u[j]   = (r[j]-a[j]*u[j-1])/bet
+    
+    for j in np.arange(n-2,-1,-1):
+        u[j] = u[j]-gam[j+1]*u[j+1]
+    return u
+
+def progress_bar(perc,text=''):
+    """
+    This is a very simple progress bar which displays the given
+    percentage of completion on the command line, overwriting its
+    previous output.
+
+    Arguments:
+    ----------
+    
+    perc : float
+    :    The percentage of completion, should be
+         between 0 and 100. Only 100.0 finishes with the
+         word "Done!".
+         
+    Keywords:
+    ---------
+    
+    text : str
+    :    Possible text for describing the running process.
+    
+    Example:
+    --------
+    
+    >>> import time
+    >>> for i in linspace(0,100,1000):
+    >>>     progress_bar(i,text='Waiting')
+    >>>     time.sleep(0.005)
+    """
+    import sys 
+    
+    if text!='': text = text+' ... '
+    
+    if perc==100.0:
+        sys.stdout.write('\r'+text+'Done!\n')
+        sys.stdout.flush()
+    else:
+        sys.stdout.write('\r'+text+'%d %%'%round(perc))
+        sys.stdout.flush()
+
 
 distri_available=False
 try:
