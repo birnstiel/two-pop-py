@@ -535,10 +535,11 @@ distri_available = False
 _helperfiles     = ['distribution_reconstruction.py','aux_functions.py']
 _gitpath         = 'https://raw.githubusercontent.com/birnstiel/Birnstiel2015_scripts/master/'
 
+
 try:
     from distribution_reconstruction import reconstruct_size_distribution
     distri_available=True
-except ImportError:
+except (ImportError,SyntaxError):
     import os      as _os
     import inspect as _inspect
     import urllib  as _urllib
@@ -552,12 +553,12 @@ except ImportError:
         from distribution_reconstruction import reconstruct_size_distribution
         distri_available=True
         print('success!')
-    except ImportError:
+    except (ImportError,SyntaxError):
         for _file in _helperfiles: _os.system('wget --no-check-certificate '+_gitpath+_file+' -O '+_module_path+_os.sep+_file)
         try:
             from distribution_reconstruction import reconstruct_size_distribution
             distri_available=True
             print('success!')
-        except ImportError:
+        except (ImportError,SyntaxError):
             distri_available=False
             print('Could not import distribution_reconstruction.py')
