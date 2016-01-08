@@ -5,3 +5,4 @@
 *.pyc
 distribution_reconstruction.py
 aux_functions.py
+.ipynb_checkpoints/
