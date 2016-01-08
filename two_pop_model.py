@@ -40,7 +40,6 @@ def two_pop_model_run(x,a_0,time,sig_g,sig_d,v_gas,T,alpha,m_star,V_FRAG,RHO_S,E
         a_df       = drift-ind. frag. limit   (nt,nr)       [cm]
         a_t        = the time dependent limit (nt,nr)       [cm]
     """
-    from uTILities import progress_bar
     from numpy     import ones,zeros,Inf,maximum,minimum,sqrt,where
     from const     import year,Grav,k_b,mu,m_p
     import sys
@@ -532,7 +531,10 @@ def progress_bar(perc,text=''):
         sys.stdout.flush()
 
 
-distri_available=False
+distri_available = False
+_helperfiles     = ['distribution_reconstruction.py','aux_functions.py']
+_gitpath         = 'https://raw.githubusercontent.com/birnstiel/Birnstiel2015_scripts/master/'
+
 try:
     from distribution_reconstruction import reconstruct_size_distribution
     distri_available=True
@@ -540,11 +542,22 @@ except ImportError:
     import os      as _os
     import inspect as _inspect
     import urllib  as _urllib
+    
     print('could not import distribution_reconstruction.py, will download it and retry')
+    
     _module_path = _os.path.dirname(_os.path.abspath(_inspect.getfile(_inspect.currentframe())))
-    for _file in ['distribution_reconstruction.py','aux_functions.py']:
-        _urllib.urlretrieve ('https://raw.githubusercontent.com/birnstiel/Birnstiel2015_scripts/master/'+_file,\
-                             _module_path+_os.sep+_file)
-    from distribution_reconstruction import reconstruct_size_distribution
-    distri_available=True
-    print('success!')
+    for _file in _helperfiles:
+        open(_module_path+_os.sep+_file, 'wb').write(_urllib.urlopen(_gitpath+_file).read())
+    try:
+        from distribution_reconstruction import reconstruct_size_distribution
+        distri_available=True
+        print('success!')
+    except ImportError:
+        for _file in _helperfiles: _os.system('wget --no-check-certificate '+_gitpath+_file+' -O '+_module_path+_os.sep+_file)
+        try:
+            from distribution_reconstruction import reconstruct_size_distribution
+            distri_available=True
+            print('success!')
+        except ImportError:
+            distri_available=False
+            print('Could not import distribution_reconstruction.py')
