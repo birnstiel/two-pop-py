@@ -19,7 +19,7 @@ import os, argparse
 import numpy as np
 import two_pop_model
 from matplotlib    import pyplot as plt
-from constants     import AU, year, Grav, M_sun, k_b, mu, m_p, R_sun, pi
+from const         import AU, year, Grav, M_sun, k_b, mu, m_p, R_sun, pi
 from two_pop_model import two_pop_model_run
 #
 # =================
@@ -33,20 +33,22 @@ PARSER = argparse.ArgumentParser(description=__doc__,formatter_class=RTHF)
 PARSER.add_argument('-nr',    help=' number of radial grid points',         type=int,   default=200)
 PARSER.add_argument('-nt',    help=' number of snapshots',                  type=int  , default=100)
 PARSER.add_argument('-na',    help=' number of particle sizes (use many!)', type=int  , default=150)
-PARSER.add_argument('-tmax',  help=' simulation end time [yr]',             type=float, default=3e6)
+PARSER.add_argument('-tmax',  help=' simulation end time [yr]',             type=float, default=1e6)
 PARSER.add_argument('-alpha', help=' turbulence parameter',                 type=float, default=1e-3)
 PARSER.add_argument('-d2g',   help=' dust-to-gas ratio',                    type=float, default=1e-2)
-PARSER.add_argument('-mstar', help=' stellar mass [solar masses]',          type=float, default=1.0)
-PARSER.add_argument('-tstar', help=' stellar temperature [K]',              type=float, default=4300.)
-PARSER.add_argument('-rstar', help=' stellar radius [solar radii]',         type=float, default=2.5)
-PARSER.add_argument('-rc',    help=' disk characteristic radius [AU]',      type=float, default=60)
+PARSER.add_argument('-mstar', help=' stellar mass [solar masses]',          type=float, default=0.7)
+PARSER.add_argument('-tstar', help=' stellar temperature [K]',              type=float, default=4010.)
+PARSER.add_argument('-rstar', help=' stellar radius [solar radii]',         type=float, default=1.806)
+PARSER.add_argument('-rc',    help=' disk characteristic radius [AU]',      type=float, default=200)
 PARSER.add_argument('-mdisk', help=' disk mass in central star masses',     type=float, default=0.1)
-PARSER.add_argument('-rhos',  help=' bulk density of the dusg [ g cm^-3]',  type=float, default=1.6)
+PARSER.add_argument('-rhos',  help=' bulk density of the dusg [ g cm^-3]',  type=float, default=1.156)
 PARSER.add_argument('-vf',    help=' fragmentation velocity [ cm s^-1]',    type=float, default=1000)
-PARSER.add_argument('-a0',    help=' initial grain size [cm]',              type=float, default=1e-4)
+PARSER.add_argument('-a0',    help=' initial grain size [cm]',              type=float, default=1e-5)
 PARSER.add_argument('-edrift',help=' drift fudge factor',                   type=float, default=1.0)
 PARSER.add_argument('-dir',   help=' output directory default: data/',      type=str,   default='data')
-PARSER.add_argument('-p',     help=' produce plots if possible',            action='store_true')
+
+PARSER.add_argument('-p',               help=' produce plots if possible',   action='store_true')
+PARSER.add_argument('-g','--nogasevol', help=' turn off gas evolution',      action='store_true')
 ARGS = PARSER.parse_args()
 #
 # set parameters according to input
@@ -68,6 +70,7 @@ a_0     = ARGS.a0
 E_drift = ARGS.edrift
 dirname = ARGS.dir
 plot    = ARGS.p
+gasevol = not ARGS.nogasevol
 #
 # print setup
 #
@@ -93,7 +96,8 @@ printvals = [
             ]
 
 for n,v,u in printvals:
-    print(n.ljust(8)+' = '+'{:3.2g}'.format(v).rjust(10)+' '+u)
+    print(n.ljust(9)+' = '+'{:3.2g}'.format(v).rjust(10)+' '+u)
+print('gas evol.'.ljust(9)+' = '+(gasevol*'on'+(not gasevol)*'off').rjust(10))
 print('\n'+35*'-')
 #
 # ===========
@@ -103,7 +107,7 @@ print('\n'+35*'-')
 # create grids and temperature
 #
 n_ri          = n_r+1
-xi            = np.logspace(np.log10(0.05),np.log10(4e3),n_ri)*AU
+xi            = np.logspace(np.log10(0.05),np.log10(3e3),n_ri)*AU
 x             = 0.5*(xi[1:]+xi[:-1])
 timesteps     = np.logspace(4,np.log10(t_max/year),n_t)*year
 T             = ( (0.05**0.25*T_star * (x /R_star)**-0.5)**4 + 1e4)**0.25
@@ -116,7 +120,7 @@ v_gas       = -3.0*alpha*k_b*T/mu/m_p/2./np.sqrt(Grav*M_star/x)*(1.+7./4.)
 #
 # call the model
 #
-[TI,SOLD,SOLG,VD,VG,v_0,v_1,a_dr,a_fr,a_df,a_t] = two_pop_model_run(x,a_0,timesteps,sigma_g,sigma_d,v_gas,T,alpha*np.ones(n_r),M_star,V_FRAG,RHO_S,E_drift,nogrowth=False)
+[TI,SOLD,SOLG,VD,VG,v_0,v_1,a_dr,a_fr,a_df,a_t] = two_pop_model_run(x,a_0,timesteps,sigma_g,sigma_d,v_gas,T,alpha*np.ones(n_r),M_star,V_FRAG,RHO_S,E_drift,nogrowth=False,gasevol=gasevol)
 #
 # remove the line which shouldn't be there (I should fix this)
 #         

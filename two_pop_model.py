@@ -1,4 +1,4 @@
-def two_pop_model_run(x,a_0,time,sig_g,sig_d,v_gas,T,alpha,m_star,V_FRAG,RHO_S,E_drift,nogrowth=False):
+def two_pop_model_run(x,a_0,time,sig_g,sig_d,v_gas,T,alpha,m_star,V_FRAG,RHO_S,E_drift,nogrowth=False,gasevol=True):
     """
     This function evolves the two population model (all model settings
     are stored in two_pop_velocity). It returns the important parameters of
@@ -24,6 +24,7 @@ def two_pop_model_run(x,a_0,time,sig_g,sig_d,v_gas,T,alpha,m_star,V_FRAG,RHO_S,E
         
     KEYWORDS:
         nogrowth        = true: particle size fixed to a0 [False]
+        gasevol         = turn gas evolution on/off       [True]
     
     RETURNS:
     
@@ -40,8 +41,8 @@ def two_pop_model_run(x,a_0,time,sig_g,sig_d,v_gas,T,alpha,m_star,V_FRAG,RHO_S,E
         a_t        = the time dependent limit (nt,nr)       [cm]
     """
     from uTILities import progress_bar
-    from numpy import ones,zeros,Inf,maximum,minimum,sqrt,where
-    from constants import year,Grav,k_b,mu,m_p
+    from numpy     import ones,zeros,Inf,maximum,minimum,sqrt,where
+    from const     import year,Grav,k_b,mu,m_p
     import sys
     #
     # some setup
@@ -152,7 +153,8 @@ def two_pop_model_run(x,a_0,time,sig_g,sig_d,v_gas,T,alpha,m_star,V_FRAG,RHO_S,E
         h_gas      = ones(n_r)
         K_gas      = zeros(n_r)
         L_gas      = zeros(n_r)
-        u_gas      =  impl_donorcell_adv_diff_delta(n_r,x,D_gas,v_gas,g_gas,h_gas,K_gas,L_gas,flim,u_gas,dt,1.0,0.0,0.0,1.0,sig_g[1],1e-100*x[n_r-1],1,A0,B0,C0,D0)
+        if gasevol:
+            u_gas      =  impl_donorcell_adv_diff_delta(n_r,x,D_gas,v_gas,g_gas,h_gas,K_gas,L_gas,flim,u_gas,dt,1.0,0.0,0.0,1.0,sig_g[1],1e-100*x[n_r-1],1,A0,B0,C0,D0)
         sig_g      = u_gas/x
         sig_g      = maximum(sig_g,1e-100)
         #
@@ -243,7 +245,7 @@ def two_pop_velocity(t,sigma_d_t,x,sigma_g,v_gas,T,alpha,m_star,a_0,V_FRAG,RHO_S
     #
     # set some constants
     #
-    from constants import k_b,mu,m_p,Grav
+    from const import k_b,mu,m_p,Grav
     from numpy import ones,zeros,maximum,minimum,sqrt,array,exp,invert,pi
     n_r = len(x)
     #
