@@ -12,4 +12,3 @@ For bug reports, questions, ... contact me via [my website](http://www.til-birns
 ### Upcoming features:
 
 - [ ] proper integration of $da/dt$ instead of using exponential approximation.
-- [ ] implementing size distribution reconstruction of [Birnstiel et al. 2015](http://dx.doi.org/10.1088/2041-8205/813/1/L14).
