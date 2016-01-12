@@ -32,7 +32,14 @@ The following files are created:
 |`v_1.dat`	| large grain velocity as function of radius and time	| cm s^-1  
 |`v_gas.dat`	| gas velocity as function of radius and time	| cm s^-1  
 
+### Package dependencies
+
+`astropy`, `numpy`, `scipy`
 
 ### Upcoming features:
 
 - [ ] proper integration of $da/dt$ instead of using exponential approximation.
+
+
+-------------
+[![astropy](http://img.shields.io/badge/powered%20by-AstroPy-orange.svg?style=flat)](http://www.astropy.org/) 
