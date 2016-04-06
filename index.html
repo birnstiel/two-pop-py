@@ -20,19 +20,18 @@
 
     <section class="main-content">
       <h1>
-<a id="two-pop-py" class="anchor" href="#two-pop-py" aria-hidden="true"><span class="octicon octicon-link"></span></a>TWO-POP-PY</h1>
+<a id="two-pop-py" class="anchor" href="#two-pop-py" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>TWO-POP-PY</h1>
 
-<p>This python script runs a two-population dust evolution model according to <a href="http://dx.doi.org/10.1051/0004-6361/201118136">Birnstiel,
-Klahr, Ercolano, A&amp;A (2012)</a>. Parameters
-can be set by using the arguments, otherwise default parameters are used (see output). The
-parameters, their meaning and units can be seen by executing <code>./two-pop-py.py -h</code>.</p>
+<p>This python script runs a two-population dust evolution model according to <a href="http://dx.doi.org/10.1051/0004-6361/201118136">Birnstiel, Klahr, Ercolano, A&amp;A (2012)</a>. Parameters can be set by using the arguments, otherwise default parameters are used (see output). The parameters, their meaning and units can be seen by executing <code>./two-pop-py.py -h</code>.</p>
 
 <p>This code is published on <a href="https://github.com/birnstiel/two-pop-py">github.com/birnstiel</a>.</p>
 
 <p>For bug reports, questions, ... contact me via <a href="http://www.til-birnstiel.de/contact/">my website</a>.</p>
 
+<p><em>If you use this code in a publication, please cite at least <a href="http://dx.doi.org/10.1051/0004-6361/201118136">Birnstiel, Klahr, Ercolano, A&amp;A (2012)</a>, and possibly <a href="http://dx.doi.org/10.1088/2041-8205/813/1/L14">Birnstiel et al. (ApJL) 2015</a> if you use the size distribution reconstruction. I addition to that, it would be best practice to include the hash of the version you used to make sure results are reproducible, as the code can change.</em></p>
+
 <h3>
-<a id="output-description" class="anchor" href="#output-description" aria-hidden="true"><span class="octicon octicon-link"></span></a>Output Description</h3>
+<a id="output-description" class="anchor" href="#output-description" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Output Description</h3>
 
 <p>Output is written in the folder <code>data/</code> by default (can be specified with option <code>-dir</code>).
 The following files are created:</p>
@@ -125,11 +124,20 @@ The following files are created:</p>
 </table>
 
 <h3>
-<a id="upcoming-features" class="anchor" href="#upcoming-features" aria-hidden="true"><span class="octicon octicon-link"></span></a>Upcoming features:</h3>
+<a id="package-dependencies" class="anchor" href="#package-dependencies" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Package dependencies</h3>
+
+<p><code>astropy</code>, <code>numpy</code>, <code>scipy</code></p>
+
+<h3>
+<a id="upcoming-features" class="anchor" href="#upcoming-features" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Upcoming features:</h3>
 
 <ul>
 <li>[ ] proper integration of $da/dt$ instead of using exponential approximation.</li>
 </ul>
+
+<hr>
+
+<p><a href="http://www.astropy.org/"><img src="http://img.shields.io/badge/powered%20by-AstroPy-orange.svg?style=flat" alt="astropy"></a> </p>
 
       <footer class="site-footer">
         <span class="site-footer-owner"><a href="https://github.com/birnstiel/two-pop-py">Two-Pop-Py</a> is maintained by <a href="https://github.com/birnstiel">birnstiel</a>.</span>
