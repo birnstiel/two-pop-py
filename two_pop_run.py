@@ -16,6 +16,17 @@ Available at: https://github.com/birnstiel/two-pop-py
 
 For bug reports, questions, ... contact birnstiel@mpia.de.
 
+Note:
+-----
+
+If you use this code in a publication, please cite at least Birnstiel,
+Klahr, & Ercolano, A&A (2012)[1], and possibly Birnstiel et al. (ApJL) 2015[2]
+if you use the size distribution reconstruction. I addition to that, it would
+be best practice to include the hash of the version you used to make sure
+results are reproducible, as the code can change.
+
+[1]: http://dx.doi.org/10.1051/0004-6361/201118136
+[2]: http://dx.doi.org/10.1088/2041-8205/813/1/L14
 
 ------------------------------------------------------------------------------- 
 """
