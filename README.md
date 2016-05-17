@@ -41,4 +41,5 @@ The following files are created:
 
 
 -------------
+[![DOI](https://zenodo.org/badge/0516/birnstiel/two-pop-py.svg)](https://zenodo.org/badge/latestdoi/0516/birnstiel/two-pop-py)
 [![GPLv3](http://img.shields.io/badge/license-GPL-brightgreen.svg?style=flat)](https://github.com/birnstiel/two-pop-py/blob/master/LICENSE) [![astropy](http://img.shields.io/badge/powered%20by-AstroPy-orange.svg?style=flat)](http://www.astropy.org/)  [![arxiv](https://img.shields.io/badge/arxiv-1510.05660-green.svg?style=flat)](http://arxiv.org/abs/1510.05660) [![arxiv](https://img.shields.io/badge/arxiv-1201.5781-green.svg?style=flat)](http://arxiv.org/abs/1201.5781) [![arxiv](https://img.shields.io/badge/arxiv-1009.3011-green.svg?style=flat)](http://arxiv.org/abs/1009.3011)
