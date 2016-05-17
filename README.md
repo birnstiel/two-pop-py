@@ -1,5 +1,7 @@
 # TWO-POP-PY                                                                  
 
+[![DOI](https://zenodo.org/badge/1015/birnstiel/two-pop-py.svg)](https://zenodo.org/badge/latestdoi/1015/birnstiel/two-pop-py)
+
 This python script runs a two-population dust evolution model according to [Birnstiel, Klahr, Ercolano, A&A (2012)](http://dx.doi.org/10.1051/0004-6361/201118136). Parameters can be set by using the arguments, otherwise default parameters are used (see output). The parameters, their meaning and units can be seen by executing `./two-pop-py.py -h`.
 
 This code is published on [github.com/birnstiel](https://github.com/birnstiel/two-pop-py).
@@ -41,5 +43,5 @@ The following files are created:
 
 
 -------------
-[![DOI](https://zenodo.org/badge/0516/birnstiel/two-pop-py.svg)](https://zenodo.org/badge/latestdoi/0516/birnstiel/two-pop-py)
-[![GPLv3](http://img.shields.io/badge/license-GPL-brightgreen.svg?style=flat)](https://github.com/birnstiel/two-pop-py/blob/master/LICENSE) [![astropy](http://img.shields.io/badge/powered%20by-AstroPy-orange.svg?style=flat)](http://www.astropy.org/)  [![arxiv](https://img.shields.io/badge/arxiv-1510.05660-green.svg?style=flat)](http://arxiv.org/abs/1510.05660) [![arxiv](https://img.shields.io/badge/arxiv-1201.5781-green.svg?style=flat)](http://arxiv.org/abs/1201.5781) [![arxiv](https://img.shields.io/badge/arxiv-1009.3011-green.svg?style=flat)](http://arxiv.org/abs/1009.3011)
+
+[![DOI](https://zenodo.org/badge/1015/birnstiel/two-pop-py.svg)](https://zenodo.org/badge/latestdoi/1015/birnstiel/two-pop-py) [![GPLv3](http://img.shields.io/badge/license-GPL-brightgreen.svg?style=flat)](https://github.com/birnstiel/two-pop-py/blob/master/LICENSE) [![astropy](http://img.shields.io/badge/powered%20by-AstroPy-orange.svg?style=flat)](http://www.astropy.org/)  [![arxiv](https://img.shields.io/badge/arxiv-1510.05660-green.svg?style=flat)](http://arxiv.org/abs/1510.05660) [![arxiv](https://img.shields.io/badge/arxiv-1201.5781-green.svg?style=flat)](http://arxiv.org/abs/1201.5781) [![arxiv](https://img.shields.io/badge/arxiv-1009.3011-green.svg?style=flat)](http://arxiv.org/abs/1009.3011)
