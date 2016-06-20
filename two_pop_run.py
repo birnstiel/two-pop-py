@@ -122,6 +122,7 @@ class results:
         args.read(dirname=dirname)
     
 class args:
+    import const as _c
     
     # names of all parameters
 
@@ -138,6 +139,7 @@ class args:
     			['rhos',   float],
     			['vfrag',  float],
     			['a0',     float],
+    			['gamma',  float],
     			['edrift', float]]
     
     # set default values
@@ -145,17 +147,18 @@ class args:
     nr      = 200
     nt      = 100
     na      = 150
-    tmax    = 1e6
+    tmax    = 1e6*_c.year
     alpha   = 1e-3
     d2g     = 1e-2
-    mstar   = 0.7
+    mstar   = 0.7*_c.M_sun
     tstar   = 4010.
-    rstar   = 1.806
-    rc      = 200
-    mdisk   = 0.1
+    rstar   = 1.806*_c.R_sun
+    rc      = 200*_c.AU
+    mdisk   = 0.1*mstar
     rhos    = 1.156
     vfrag   = 1000
     a0      = 1e-5
+    gamma   = 1.0
     edrift  = 1.0
     dir     = 'data'
     gasevol = True
@@ -192,6 +195,7 @@ class args:
             'rhos':    [1,            'g/cm^3'],
             'vfrag':   [1,            'cm/s'],
             'a0':      [1,            'cm'],
+            'gamma':   [1,            ''],
             'edrift':  [1,            '']
             }
         
@@ -234,7 +238,95 @@ class args:
             elif t is float:
                 setattr(self, name, parser.getfloat('parameters', name))
 
+def lbp_solution(R,gamma,nu1,mstar,mdisk,RC0,time=0):
+    """
+    Calculate Lynden-Bell & Pringle self similar solution.
+    All values need to be either given with astropy-units, or
+    in as pure float arrays in cgs units.
     
+    Arguments:
+    ----------
+    
+    R : array
+    : radius array
+    
+    gamma : float
+    : viscosity exponent
+    
+    nu1 : float
+    : viscosity at R[0]
+    
+    mstar : float
+    : stellar mass
+    
+    mdisk : float
+    : disk mass at t=0
+    
+    RC0 : float
+    : critical radius at t=0
+    
+    Keywords:
+    ---------
+    
+    time : float
+    : physical "age" of the analytical solution 
+    
+    Output:
+    -------
+    sig_g,RC(t)
+    
+    sig_g : array
+    : gas surface density, with or without unit, depending on input
+    
+    RC : the critical radius
+    
+    """
+    import astropy.units as u
+    import numpy as np
+
+    # assume cgs if no units are given
+    
+    units = True
+    if not hasattr(R,'unit'):
+        R     = R*u.cm
+        units  = False
+    if not hasattr(mdisk,'unit'):
+        mdisk = mdisk*u.g
+    if not hasattr(mstar,'unit'):
+        mstar = mstar*u.g
+    if not hasattr(nu1,'unit'):
+        nu1   = nu1*u.cm**2/u.s
+    if not hasattr(RC0,'unit'):
+        RC0   = RC0*u.cm
+    if time is None: time = 0
+    if not hasattr(time,'unit'):
+        time  = time*u.s
+        
+    # convert to variables as in Hartmann paper
+    
+    R1   = R[0]
+    r    = R/R1
+    ts   = 1./(3*(2-gamma)**2)*R1**2/nu1
+    
+    T0   = (RC0/R1)**(2.-gamma)
+    toff = (T0-1)*ts
+    
+    T1   = (time+toff)/ts+1
+    RC1  = T1**(1./(2.-gamma))*R1
+            
+    # the normalization constant
+    
+    C  = (-3*mdisk*nu1*T0**(1./(4. - 2.*gamma))*(-2 + gamma))/2./R1**2
+    
+    # calculate the surface density
+    
+    sig_g = C/(3*np.pi*nu1*r)*T1**(-(5./2.-gamma)/(2.-gamma))*np.exp(-(r**(2.-gamma))/T1)
+    
+    if units:
+        return sig_g,RC1
+    else:
+        return sig_g.cgs.value,RC1.cgs.value
+
 def model_wrapper(ARGS,plot=False,save=False):
     """
     This is a wrapper for the two-population model `two_pop_model_run`, in which
@@ -260,24 +352,25 @@ def model_wrapper(ARGS,plot=False,save=False):
     import numpy as np
     import two_pop_model
     from matplotlib    import pyplot as plt
-    from const         import AU, year, Grav, M_sun, k_b, mu, m_p, R_sun, pi
+    from const         import AU, year, Grav, k_b, mu, m_p
     #
     # set parameters according to input
     #
     nr      = ARGS.nr
     nt      = ARGS.nt
-    tmax    = ARGS.tmax*year
+    tmax    = ARGS.tmax
     n_a     = ARGS.na
     alpha   = ARGS.alpha
     d2g     = ARGS.d2g
-    mstar   = ARGS.mstar*M_sun
+    mstar   = ARGS.mstar
     tstar   = ARGS.tstar
-    rstar   = ARGS.rstar*R_sun
-    rc      = ARGS.rc*AU
-    mdisk   = ARGS.mdisk*mstar
+    rstar   = ARGS.rstar
+    rc      = ARGS.rc
+    mdisk   = ARGS.mdisk
     rhos    = ARGS.rhos
     vfrag   = ARGS.vfrag
     a0      = ARGS.a0
+    gamma   = ARGS.gamma
     edrift  = ARGS.edrift
     gasevol = ARGS.gasevol
     #
@@ -298,13 +391,19 @@ def model_wrapper(ARGS,plot=False,save=False):
     xi            = np.logspace(np.log10(0.05),np.log10(3e3),nri)*AU
     x             = 0.5*(xi[1:]+xi[:-1])
     timesteps     = np.logspace(4,np.log10(tmax/year),nt)*year
-    T             = ( (0.05**0.25*tstar * (x /rstar)**-0.5)**4 + 1e4)**0.25
+    T             = ( (0.05**0.25*tstar * (x /rstar)**-0.5)**4 + (7.)**4)**0.25
     #
-    # set the initial surface density & velocity
+    # set the initial surface density & velocity according Lynden-Bell & Pringle solution
     #
-    sigma_g     = np.maximum(mdisk/(2*pi*rc**2)*(rc/x)*np.exp(-x/rc),1e-100)
-    sigma_d     = sigma_g*d2g
-    v_gas       = -3.0*alpha*k_b*T/mu/m_p/2./np.sqrt(Grav*mstar/x)*(1.+7./4.)
+    alpha   = alpha*(x/x[0])**(gamma-1)
+    om1     = np.sqrt(Grav*args.mstar/x[0]**3)
+    cs1     = np.sqrt(k_b*T[0]/mu/m_p)
+    nu1     = args.alpha*cs1**2/om1
+    
+    sigma_g,_ = lbp_solution(x, gamma, nu1, mstar, mdisk, rc)
+    sigma_g = np.maximum(sigma_g,1e-100)
+    sigma_d = sigma_g*d2g
+    v_gas   = -3.0*alpha*k_b*T/mu/m_p/2./np.sqrt(Grav*mstar/x)*(1.+7./4.)
     #
     # call the model
     #
@@ -316,11 +415,20 @@ def model_wrapper(ARGS,plot=False,save=False):
     #
     print('\n'+35*'-')
     if two_pop_model.distri_available:
-        print('reconstructing size distribution')
-        reconstruct_size_distribution = two_pop_model.reconstruct_size_distribution
-        it = -1
-        a  = np.logspace(np.log10(a0),np.log10(5*a_t.max()),n_a)
-        sig_sol,_,_,_,_,_ = reconstruct_size_distribution(x,a,TI[it],SOLG[it],SOLD[-1],alpha*np.ones(nr),rhos,T,mstar,vfrag,a_0=a0)
+        try:
+            print('reconstructing size distribution')
+            reconstruct_size_distribution = two_pop_model.reconstruct_size_distribution
+            it = -1
+            a  = np.logspace(np.log10(a0),np.log10(5*a_t.max()),n_a)
+            sig_sol,_,_,_,_,_ = reconstruct_size_distribution(x,a,TI[it],SOLG[it],SOLD[-1],alpha*np.ones(nr),rhos,T,mstar,vfrag,a_0=a0)
+        except Exception, _:
+            import traceback,warnings
+            w = 'Could not reconstruct size distribution\nTraceback:\n----------\n' 
+            w+= traceback.format_exc()  
+            w+= '\n----------'
+            warnings.warn(w)
+            a       = None
+            sig_sol = None
     else:
         print('distribution reconstruction is not available!')
     #
@@ -386,20 +494,67 @@ def model_wrapper(ARGS,plot=False,save=False):
     print('\n'+35*'-')
     return res
     
-def test():
+def run_test():
+    """
+    Test gas evolution: use small rc and large alpha
+    """
     from const import AU
-    import matplotlib.pyplot as plt 
-    Args = args()
-    res  = model_wrapper(Args)
+    Args       = args()
+    Args.rc    = 20*AU
+    Args.alpha = 1e-2
+    res        = model_wrapper(Args)
+    return res
+
+def plot_test(res):
+    """
+    Plot the test result
+    """
+    from aux import year, AU
+    from const import Grav, m_p, mu, k_b
+    import two_pop_run
+    import numpy as np
+    import matplotlib.pyplot as plt
+    from matplotlib.pyplot import style
+    style.use(['seaborn-dark',{'axes.grid': True,'font.size':10}]);
     
+    # read the results
+    
+    args  = res.args
     x     = res.x
+    sig_0 = res.sigma_g[0]
     sig_g = res.sigma_g[-1]
     t     = res.timesteps[-1]
-    temp  = res.T[-1]
-    alpha = Args.alpha
+    temp  = res.T
+    alpha = args.alpha
+    gamma = args.gamma
+    rc    = args.rc
+    mdisk = args.mdisk
+    mstar = args.mstar
     
-    _,ax = plt.subplots()
-    ax.loglog(x/AU,sig_g)
+    # calculate analytical solution
+    
+    cs1 = np.sqrt(k_b*temp[0]/mu/m_p)
+    om1 = np.sqrt(Grav*mstar/x[0]**3)
+    nu1 = alpha*cs1**2/om1
+    siga_0,_ = two_pop_run.lbp_solution(x,gamma,nu1,mstar,mdisk,rc)
+    siga_1,_ = two_pop_run.lbp_solution(x,gamma,nu1,mstar,mdisk,rc,time=t)
+    
+    # compare results against analytical solution
+    
+    f,axs = plt.subplots(1,2,figsize=(10,4),sharex=True,sharey=True)
+    axs[0].loglog(x/AU,siga_0,'-',label='analytical');
+    axs[0].loglog(x/AU,sig_0,'r--',label='initial');
+    axs[0].set_title('t = 0 years')
+    axs[0].legend();
+    axs[1].loglog(x/AU,siga_1,'-',label='analytical');
+    axs[1].loglog(x/AU,sig_g,'r--',label='simulated');
+    axs[1].set_title('t = {:3.2g} years'.format(t/year))
+    axs[1].legend();
+    axs[1].set_ylim(1e-5,1e5);
+    for ax in axs:
+        ax.set_xlabel('r [AU]')
+        ax.set_ylabel('$\Sigma_\mathrm{g}$ [g cm$^{-2}$]');
+    f.savefig('test.pdf')
     
 if __name__=='__main__':
     import argparse
@@ -426,6 +581,7 @@ if __name__=='__main__':
     PARSER.add_argument('-rhos',  help='bulk density of the dusg [ g cm^-3]',  type=float, default=1.156)
     PARSER.add_argument('-vfrag', help='fragmentation velocity [ cm s^-1]',    type=float, default=1000)
     PARSER.add_argument('-a0',    help='initial grain size [cm]',              type=float, default=1e-5)
+    PARSER.add_argument('-gamma', help='viscosity: alpha*(r/r[0])**gamma',     type=float, default=1)
     PARSER.add_argument('-edrift',help='drift fudge factor',                   type=float, default=1.0)
     PARSER.add_argument('-dir',   help='output directory default: data/',      type=str,   default='data')
     
