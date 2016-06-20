@@ -509,8 +509,7 @@ def plot_test(res):
     """
     Plot the test result
     """
-    from aux import year, AU
-    from const import Grav, m_p, mu, k_b
+    from const import Grav, m_p, mu, k_b, year, AU
     import two_pop_run
     import numpy as np
     import matplotlib.pyplot as plt
