@@ -12,3 +12,4 @@ clean:
 	
 clobber: clean
 	-rm -rf data
+	-rm -rf *.pyc
