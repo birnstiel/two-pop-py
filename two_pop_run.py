@@ -557,6 +557,7 @@ def plot_test(res):
     
 if __name__=='__main__':
     import argparse
+    import const as c
     #
     # =================
     # ARGUMENT HANDLING
@@ -587,6 +588,14 @@ if __name__=='__main__':
     PARSER.add_argument('-p',               help='produce plots if possible',  action='store_true')
     PARSER.add_argument('-g','--gasevol',   help='turn *off* gas evolution',   action='store_false')
     ARGSIN = PARSER.parse_args()
+    
+    # convert units to cgs
+    
+    ARGSIN.tmax  *= c.year 
+    ARGSIN.mstar *= c.M_sun
+    ARGSIN.rstar *= c.R_sun
+    ARGSIN.rc    *= c.AU
+    ARGSIN.mdisk *= ARGSIN.mstar
     
     # convert to arguments object
     
