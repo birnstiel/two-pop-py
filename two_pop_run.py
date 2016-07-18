@@ -126,21 +126,26 @@ class args:
     
     # names of all parameters
 
-    varlist = [ ['nr',     int],
-    			['nt',     int],
-    			['tmax',   float],
-    			['alpha',  float],
-    			['d2g',    float],
-    			['mstar',  float],
-    			['tstar',  float],
-    			['rstar',  float],
-    			['rc',     float],
-    			['mdisk',  float],
-    			['rhos',   float],
-    			['vfrag',  float],
-    			['a0',     float],
-    			['gamma',  float],
-    			['edrift', float]]
+    varlist = [  ['nr',       int],
+                ['nt',        int],
+                ['tmax',    float],
+                ['alpha',   float],
+                ['d2g',     float],
+                ['mstar',   float],
+                ['tstar',   float],
+                ['rstar',   float],
+                ['rc',      float],
+                ['mdisk',   float],
+                ['rhos',    float],
+                ['vfrag',   float],
+                ['a0',      float],
+                ['gamma',   float],
+                ['edrift',  float],
+                ['T',       float],
+                ['gasevol',  bool],
+                ['tempevol', bool],
+                ['starevol', bool],
+            ]
     
     # set default values
     
@@ -160,12 +165,19 @@ class args:
     a0      = 1e-5
     gamma   = 1.0
     edrift  = 1.0
-    dir     = 'data'
-    gasevol = True
+
+    gasevol  = True
+    tempevol = False
+    starevol = False
+    T        = None
+    dir      = 'data'
     
     def __init__(self,**kwargs):
         """
         Initialize arguments. Simulation parameters can be given as keywords.
+        To list all parameters, call `print_args()`. All quantities need to be
+        given in CGS units, even though they might be printed by `print_args`
+        using other units.
         """
         import warnings
         for k,v in kwargs.iteritems():
@@ -201,8 +213,13 @@ class args:
         
         for n,conv_unit in conversion.iteritems():
             conv,unit = conv_unit
-            print(n.ljust(9)+' = '+'{:3.2g}'.format(conv*getattr(self, n)).rjust(10)+' '+unit)
-        print('gas evol.'.ljust(9)+' = '+(self.gasevol*'on'+(not self.gasevol)*'off').rjust(10))
+            print(n.ljust(17)+' = '+'{:3.2g}'.format(conv*getattr(self, n)).rjust(10)+' '+unit)
+            
+        # print other arguments
+            
+        print('Gas         evol.'.ljust(17)+' = '+(self.gasevol *'on'+(not self.gasevol )*'off').rjust(10))
+        print('Temperature evol.'.ljust(17)+' = '+(self.tempevol*'on'+(not self.tempevol)*'off').rjust(10))
+        print('Stellar     evol.'.ljust(17)+' = '+(self.starevol*'on'+(not self.starevol)*'off').rjust(10))
         print('\n'+35*'-')
     
     def write_args(self):
@@ -210,33 +227,52 @@ class args:
         Write out the simulation parameters to the file 'parameters.ini' in the
         folder specified in args.dir
         """
-        import ConfigParser, os
+        import configobj, os
         if not os.path.isdir(self.dir): os.mkdir(self.dir)
-        parser = ConfigParser.ConfigParser()
+        parser = configobj.ConfigObj()
+        parser.filename = self.dir+os.sep+'parameters.ini'
 
-        parser.add_section('parameters')
-        for name,_ in self.varlist:
-            parser.set('parameters', name, getattr(self, name))
+        for name,_ in self.varlist: parser[name] = getattr(self, name)
 
-        with open(self.dir+os.sep+'parameters.ini','w') as f:
-            parser.write(f)
+        parser.write()
 
     def read_args(self):
         """
         Read in the simulation parameters from the file 'parameters.ini' in the
         folder specified in args.dir
         """
-        import ConfigParser, os
-        parser = ConfigParser.ConfigParser()
-        parser.read(self.dir+os.sep+'parameters.ini')
-
-        for name,t in self.varlist:
-            if t is int:
-                setattr(self, name, parser.getint('parameters', name))
-            elif t is bool:
-                setattr(self, name, parser.getboolean('parameters', name))
-            elif t is float:
-                setattr(self, name, parser.getfloat('parameters', name))
+        import configobj, os, numpy
+        parser = configobj.ConfigObj(self.dir+os.sep+'parameters.ini')
+        
+        varlist = {v[0]:v[1] for v in self.varlist}
+        
+        for name,val in parser.iteritems():
+            if name not in varlist:
+                print('Unknown Parameter:{}'.format(name))
+                continue
+            
+            t = varlist[name]
+            
+            # process ints, bools, floats and lists of them
+            
+            if t in [int,bool,float]:
+                if type(val) is list:
+                    # lists
+                    setattr(self, name, [t(v) for v in val])
+                elif '[' in val:
+                    # numpy arrays
+                    val = val.replace('[','').replace(']','').replace('\n',' ')
+                    val = [t(v) for v in val.split()]
+                    setattr(self, name, numpy.array(val))
+                else:
+                    # plain values
+                    setattr(self, name, t(val))
+            else:
+                # stings and nones
+                if val=='None':
+                    val = None
+                else:
+                    setattr(self,name,val)
 
 def lbp_solution(R,gamma,nu1,mstar,mdisk,RC0,time=0):
     """
@@ -356,23 +392,26 @@ def model_wrapper(ARGS,plot=False,save=False):
     #
     # set parameters according to input
     #
-    nr      = ARGS.nr
-    nt      = ARGS.nt
-    tmax    = ARGS.tmax
-    n_a     = ARGS.na
-    alpha   = ARGS.alpha
-    d2g     = ARGS.d2g
-    mstar   = ARGS.mstar
-    tstar   = ARGS.tstar
-    rstar   = ARGS.rstar
-    rc      = ARGS.rc
-    mdisk   = ARGS.mdisk
-    rhos    = ARGS.rhos
-    vfrag   = ARGS.vfrag
-    a0      = ARGS.a0
-    gamma   = ARGS.gamma
-    edrift  = ARGS.edrift
-    gasevol = ARGS.gasevol
+    nr       = ARGS.nr
+    nt       = ARGS.nt
+    tmax     = ARGS.tmax
+    n_a      = ARGS.na
+    alpha    = ARGS.alpha
+    d2g      = ARGS.d2g
+    mstar    = ARGS.mstar
+    tstar    = ARGS.tstar
+    rstar    = ARGS.rstar
+    rc       = ARGS.rc
+    mdisk    = ARGS.mdisk
+    rhos     = ARGS.rhos
+    vfrag    = ARGS.vfrag
+    a0       = ARGS.a0
+    gamma    = ARGS.gamma
+    edrift   = ARGS.edrift
+    gasevol  = ARGS.gasevol
+    tempevol = ARGS.tempevol
+    starevol = ARGS.starevol
+    T        = ARGS.T
     #
     # print setup
     #
