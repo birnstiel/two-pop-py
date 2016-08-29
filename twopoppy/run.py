@@ -57,7 +57,7 @@ class results:
         """
         import os
         import numpy as np
-        import two_pop_model
+        import model
         
         if dirname is None: dirname = args.dir
         
@@ -79,7 +79,7 @@ class results:
         np.savetxt(dirname+os.sep+'a_df.dat',    self.a_df)
         np.savetxt(dirname+os.sep+'a_t.dat',     self.a_t)
         
-        if two_pop_model.distri_available:
+        if model.distri_available:
             np.savetxt(dirname+os.sep+'a.dat',         self.a)
             np.savetxt(dirname+os.sep+'sigma_d_a.dat', self.sig_sol)
         
@@ -383,7 +383,7 @@ def lbp_solution(R,gamma,nu1,mstar,mdisk,RC0,time=0):
 
 def model_wrapper(ARGS,plot=False,save=False):
     """
-    This is a wrapper for the two-population model `two_pop_model_run`, in which
+    This is a wrapper for the two-population model `model.model_run`, in which
     the disk profile is a self-similar solution.
     
     Arguments:
@@ -404,7 +404,7 @@ def model_wrapper(ARGS,plot=False,save=False):
     results : instance of the results object
     """
     import numpy as np
-    import two_pop_model
+    import model
     from matplotlib    import pyplot as plt
     from const         import AU, year, Grav, k_b, mu, m_p
     #
@@ -479,17 +479,17 @@ def model_wrapper(ARGS,plot=False,save=False):
     
     # call the model
     
-    TI,SOLD,SOLG,VD,VG,v_0,v_1,a_dr,a_fr,a_df,a_t = two_pop_model.two_pop_model_run(x,a0,timesteps,sigma_g,sigma_d,v_gas,T,alpha*np.ones(nr),mstar,vfrag,rhos,edrift,nogrowth=False,gasevol=gasevol)
+    TI,SOLD,SOLG,VD,VG,v_0,v_1,a_dr,a_fr,a_df,a_t = model.model_run(x,a0,timesteps,sigma_g,sigma_d,v_gas,T,alpha*np.ones(nr),mstar,vfrag,rhos,edrift,nogrowth=False,gasevol=gasevol)
     #
     # ================================
     # RECONSTRUCTING SIZE DISTRIBUTION
     # ================================
     #
     print('\n'+35*'-')
-    if two_pop_model.distri_available:
+    if model.distri_available:
         try:
             print('reconstructing size distribution')
-            reconstruct_size_distribution = two_pop_model.reconstruct_size_distribution
+            reconstruct_size_distribution = model.reconstruct_size_distribution
             it = -1
             a  = np.logspace(np.log10(a0),np.log10(5*a_t.max()),n_a)
             sig_sol,_,_,_,_,_ = reconstruct_size_distribution(x,a,TI[it],SOLG[it],SOLD[-1],alpha*np.ones(nr),rhos,T,mstar,vfrag,a_0=a0)
@@ -522,7 +522,7 @@ def model_wrapper(ARGS,plot=False,save=False):
     res.a_t       = a_t
     res.args      = ARGS
     
-    if two_pop_model.distri_available:
+    if model.distri_available:
         res.a       = a
         res.sig_sol = sig_sol
     if save: res.write()
@@ -547,7 +547,7 @@ def model_wrapper(ARGS,plot=False,save=False):
         except ImportError:
             print('Could not import GUI, will not plot GUI')
         
-        if two_pop_model.distri_available:
+        if model.distri_available:
             _,ax = plt.subplots(tight_layout=True)
             gsf  = 2*(a[1]/a[0]-1)/(a[1]/a[0]+1)
             mx   = np.ceil(np.log10(sig_sol.max()/gsf))
@@ -582,7 +582,7 @@ def plot_test(res):
     Plot the test result
     """
     from const import Grav, m_p, mu, k_b, year, AU
-    import two_pop_run
+    import run
     import numpy as np
     import matplotlib.pyplot as plt
     from matplotlib.pyplot import style
@@ -607,8 +607,8 @@ def plot_test(res):
     cs1 = np.sqrt(k_b*temp[0]/mu/m_p)
     om1 = np.sqrt(Grav*mstar/x[0]**3)
     nu1 = alpha*cs1**2/om1
-    siga_0,_ = two_pop_run.lbp_solution(x,gamma,nu1,mstar,mdisk,rc)
-    siga_1,_ = two_pop_run.lbp_solution(x,gamma,nu1,mstar,mdisk,rc,time=t)
+    siga_0,_ = run.lbp_solution(x,gamma,nu1,mstar,mdisk,rc)
+    siga_1,_ = run.lbp_solution(x,gamma,nu1,mstar,mdisk,rc,time=t)
     
     # compare results against analytical solution
     
