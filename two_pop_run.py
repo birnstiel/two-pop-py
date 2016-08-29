@@ -126,7 +126,7 @@ class args:
     
     # names of all parameters
 
-    varlist = [  ['nr',       int],
+    varlist = [ ['nr',        int],
                 ['nt',        int],
                 ['tmax',    float],
                 ['alpha',   float],
@@ -186,12 +186,13 @@ class args:
             else:
                 warnings.warn("No such argument")
     
-    def print_args(self):
+    def __str__(self):
         """
-        Prints out all arguments
+        String representation of arguments
         """
         from const import year, M_sun, R_sun, AU
-        print(  35*'-'+'\n')
+        s = ''
+        s+=35*'-'+'\n'
         
         conversion = {
             'nr':      [1,            ''],
@@ -213,14 +214,31 @@ class args:
         
         for n,conv_unit in conversion.iteritems():
             conv,unit = conv_unit
-            print(n.ljust(17)+' = '+'{:3.2g}'.format(conv*getattr(self, n)).rjust(10)+' '+unit)
+            value     = getattr(self, n)
+            isarray   = hasattr(value, '__len__')
+            if isarray:
+                s+=n.ljust(17)+' = '+'[{:3.2g} ... {:3.2g}]'.format(conv*value[0],conv*value[-1]).rjust(15)+' '+unit+'\n'
+            else:
+                s+=n.ljust(17)+' = '+'{:3.2g}'.format(conv*value).rjust(15)+' '+unit+'\n'
             
         # print other arguments
             
-        print('Gas         evol.'.ljust(17)+' = '+(self.gasevol *'on'+(not self.gasevol )*'off').rjust(10))
-        print('Temperature evol.'.ljust(17)+' = '+(self.tempevol*'on'+(not self.tempevol)*'off').rjust(10))
-        print('Stellar     evol.'.ljust(17)+' = '+(self.starevol*'on'+(not self.starevol)*'off').rjust(10))
-        print('\n'+35*'-')
+        s += 'Gas         evol.'.ljust(17)+' = '+(self.gasevol *'on'+(not self.gasevol )*'off').rjust(15)+'\n'
+        s += 'Temperature evol.'.ljust(17)+' = '+(self.tempevol*'on'+(not self.tempevol)*'off').rjust(15)+'\n'
+        s += 'Stellar     evol.'.ljust(17)+' = '+(self.starevol*'on'+(not self.starevol)*'off').rjust(15)+'\n'
+        
+        if self.T is None:
+            s += 'Temperature'.ljust(17)+' = '+'None'.rjust(15)
+        elif hasattr(self.T,'__call__'):
+            s += 'Temperature'.ljust(17)+' = '+'function'.rjust(15)
+        else:
+            s += 'Temperature'.ljust(17)+' = '+'{}'.format(self.T).rjust(15)
+        
+        s += '\n'+35*'-'+'\n'
+        return s
+        
+    def print_args(self):
+        print(self.__str__())
     
     def write_args(self):
         """
@@ -284,35 +302,35 @@ def lbp_solution(R,gamma,nu1,mstar,mdisk,RC0,time=0):
     ----------
     
     R : array
-    : radius array
+        radius array
     
     gamma : float
-    : viscosity exponent
+        viscosity exponent
     
     nu1 : float
-    : viscosity at R[0]
+        viscosity at R[0]
     
     mstar : float
-    : stellar mass
+        stellar mass
     
     mdisk : float
-    : disk mass at t=0
+        disk mass at t=0
     
     RC0 : float
-    : critical radius at t=0
+        critical radius at t=0
     
     Keywords:
     ---------
     
     time : float
-    : physical "age" of the analytical solution 
+        physical "age" of the analytical solution 
     
     Output:
     -------
     sig_g,RC(t)
     
     sig_g : array
-    : gas surface density, with or without unit, depending on input
+        gas surface density, with or without unit, depending on input
     
     RC : the critical radius
     
@@ -376,10 +394,10 @@ def model_wrapper(ARGS,plot=False,save=False):
     ---------
     
     plot : bool
-    :   whether or not to plot the default figures
+          whether or not to plot the default figures
 
     save : bool
-    :   whether or not to write the data to disk
+          whether or not to write the data to disk
     
     Output:
     -------
@@ -430,11 +448,26 @@ def model_wrapper(ARGS,plot=False,save=False):
     xi            = np.logspace(np.log10(0.05),np.log10(3e3),nri)*AU
     x             = 0.5*(xi[1:]+xi[:-1])
     timesteps     = np.logspace(4,np.log10(tmax/year),nt)*year
-    T             = ( (0.05**0.25*tstar * (x /rstar)**-0.5)**4 + (7.)**4)**0.25
-    #
+    if starevol:
+        raise ValueError('stellar evolution not implemented')
+
+    # if T is not set, define default temperature function.
+        
+    if T is None:
+        def T(x,locals_):
+            return ( (0.05**0.25*tstar * (x /rstar)**-0.5)**4 + (7.)**4)**0.25
+        
+    # if temperature should not evolve, then replace the function with its initial value        
+        
+    if not tempevol and hasattr(T,'__call__'):
+        T = T(x,locals())
+    
     # set the initial surface density & velocity according Lynden-Bell & Pringle solution
-    #
-    alpha   = alpha*(x/x[0])**(gamma-1)
+    
+    if type(alpha*1.0) is float:
+        alpha   = alpha*(x/x[0])**(gamma-1)
+    else:
+        print('alpha given as array, ignoring gamma in setting alpha')
     om1     = np.sqrt(Grav*args.mstar/x[0]**3)
     cs1     = np.sqrt(k_b*T[0]/mu/m_p)
     nu1     = args.alpha*cs1**2/om1
@@ -443,10 +476,10 @@ def model_wrapper(ARGS,plot=False,save=False):
     sigma_g = np.maximum(sigma_g,1e-100)
     sigma_d = sigma_g*d2g
     v_gas   = -3.0*alpha*k_b*T/mu/m_p/2./np.sqrt(Grav*mstar/x)*(1.+7./4.)
-    #
+    
     # call the model
-    #
-    [TI,SOLD,SOLG,VD,VG,v_0,v_1,a_dr,a_fr,a_df,a_t] = two_pop_model.two_pop_model_run(x,a0,timesteps,sigma_g,sigma_d,v_gas,T,alpha*np.ones(nr),mstar,vfrag,rhos,edrift,nogrowth=False,gasevol=gasevol)
+    
+    TI,SOLD,SOLG,VD,VG,v_0,v_1,a_dr,a_fr,a_df,a_t = two_pop_model.two_pop_model_run(x,a0,timesteps,sigma_g,sigma_d,v_gas,T,alpha*np.ones(nr),mstar,vfrag,rhos,edrift,nogrowth=False,gasevol=gasevol)
     #
     # ================================
     # RECONSTRUCTING SIZE DISTRIBUTION

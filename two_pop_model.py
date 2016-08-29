@@ -4,41 +4,59 @@ def two_pop_model_run(x,a_0,time,sig_g,sig_d,v_gas,T,alpha,m_star,V_FRAG,RHO_S,E
     are stored in two_pop_velocity). It returns the important parameters of
     the model.
     
-    USAGE:
-    [time,solution_d,solution_g,v_bar,v_0,v_1,a_dr,a_fr,a_df,a_t]  =  two_pop_model_run_ic ...
-    (x,a_0,time,sig_g,sig_d,v_gas,T,alpha,m_star,V_FRAG,RHO_S,E_drift):
     
-    WHERE:
-        x               = radial grid (nr)                [cm]
-        a_0             = monomer size                    [cm]
-        time            = time of snapshots (nt)          [s]
-        sig_g           = gas  surface density (nr)       [g cm^-2]
-        sig_d           = dust surface density (nr)       [g cm^-2]
-        v_gas           = gas velocity (nr)               [cm/s]
-        T               = temperature grid (nr)           [K]
-        alpha           = turbulence parameter (nr)       [-]
-        m_star          = stellar mass (nt)               [g]
-        V_FRAG          = fragmentation velocity          [cm s^-1]
-        RHO_S           = internal density of the dust    [g cm^-3]
-        E_drift         = drift efficiency                [-]
+    Arguments:
+    ----------
+    x               = radial grid (nr)                [cm]
+    a_0             = monomer size                    [cm]
+    time            = time of snapshots (nt)          [s]
+    sig_g           = gas  surface density (nr)       [g cm^-2]
+    sig_d           = dust surface density (nr)       [g cm^-2]
+    v_gas           = gas velocity (nr)               [cm/s]
+    T               = temperature array (nr)/function [K]
+    alpha           = turbulence parameter (nr)       [-]
+    m_star          = stellar mass (nt)               [g]
+    V_FRAG          = fragmentation velocity          [cm s^-1]
+    RHO_S           = internal density of the dust    [g cm^-3]
+    E_drift         = drift efficiency                [-]
         
-    KEYWORDS:
-        nogrowth        = true: particle size fixed to a0 [False]
-        gasevol         = turn gas evolution on/off       [True]
+    Keywords:
+    ---------
     
-    RETURNS:
+    nogrowth        = true: particle size fixed to a0 [False]
+    gasevol         = turn gas evolution on/off       [True]
     
-        time       = snap shot time           (nt,nr)       [s]
-        solution_d = dust surface density     (nt,nr)       [g cm^-2]
-        solution_g = dust surface density     (nt,nr)       [g cm^-2]
-        v_bar      = dust velocity            (nt,nr)       [cm s^-1]
-        v_gas      = gas velocity             (nt,nr)       [cm s^-1]
-        v_0        = small dust velocity      (nt,nr)       [cm s^-1]
-        v_1        = large dust velocity      (nt,nr)       [cm s^-1]
-        a_dr       = drift size limit         (nt,nr)       [cm]
-        a_fr       = fragmentation size limit (nt,nr)       [cm]
-        a_df       = drift-ind. frag. limit   (nt,nr)       [cm]
-        a_t        = the time dependent limit (nt,nr)       [cm]
+    Returns:
+    ---------
+    
+    time       = snap shot time           (nt,nr)       [s]
+    solution_d = dust surface density     (nt,nr)       [g cm^-2]
+    solution_g = dust surface density     (nt,nr)       [g cm^-2]
+    v_bar      = dust velocity            (nt,nr)       [cm s^-1]
+    v_gas      = gas velocity             (nt,nr)       [cm s^-1]
+    v_0        = small dust velocity      (nt,nr)       [cm s^-1]
+    v_1        = large dust velocity      (nt,nr)       [cm s^-1]
+    a_dr       = drift size limit         (nt,nr)       [cm]
+    a_fr       = fragmentation size limit (nt,nr)       [cm]
+    a_df       = drift-ind. frag. limit   (nt,nr)       [cm]
+    a_t        = the time dependent limit (nt,nr)       [cm]
+    
+    Note:
+    -----
+    
+    the temperature can be an array (wit nr elements) or it can be a function
+    that function is always just called with two arguments r and locals(). This
+    allows the user to access local information like surface density if
+    necessary (nonsense-example):
+
+        def T(x,locals_):
+            return 10*(x/x[-1])**-1.5 * locals_['sig_g']/locals_['sig_g'][-1]
+    
+    
+    but still keeps things simple enough to do something like this:
+    
+        def T(x,locals_):
+            return 200*(x/AU)**-1
     """
     from numpy     import ones,zeros,Inf,maximum,minimum,sqrt,where
     from const     import year,Grav,k_b,mu,m_p
@@ -78,10 +96,20 @@ def two_pop_model_run(x,a_0,time,sig_g,sig_d,v_gas,T,alpha,m_star,V_FRAG,RHO_S,E
     it_old          = 1
     snap_count      = 0
     progress_bar(round((it_old-1)/(n_t-1)*100),'toy model running')
+    
+    # T can be either an array or a specific function.
+    # in either case, we define a function that returns the temperature
+    
+    if hasattr(T, '__call__'):
+        Tfunc = T
+    else:
+        def Tfunc(x,locals_):
+            return T
+
     #
     # save the velocity which will be used
     #
-    res  = two_pop_velocity(t,solution_d[0,:],x,sig_g,v_gas,T,alpha,m_star,a_0,V_FRAG,RHO_S,E_drift,nogrowth=nogrowth)
+    res  = two_pop_velocity(t,solution_d[0,:],x,sig_g,v_gas,Tfunc(x,locals()),alpha,m_star,a_0,V_FRAG,RHO_S,E_drift,nogrowth=nogrowth)
     v_bar[0,:] = res[0]
     Diff[0,:]  = res[1]
     v_0[0,:]   = res[2]
@@ -106,10 +134,15 @@ def two_pop_model_run(x,a_0,time,sig_g,sig_d,v_gas,T,alpha,m_star,V_FRAG,RHO_S,E
             print('it_old = %g'%it_old)
             print('dt = 0')
             sys.exit(1)
-        #
+            
+        # update the temperature            
+            
+        _T = Tfunc(x,locals())
+            
+        
         # calculate the velocity
-        #
-        res    = two_pop_velocity(t,u_in/x,x,sig_g,v_gas,T,alpha,m_star,a_0,V_FRAG,RHO_S,E_drift,nogrowth=nogrowth)
+        
+        res    = two_pop_velocity(t,u_in/x,x,sig_g,v_gas,_T,alpha,m_star,a_0,V_FRAG,RHO_S,E_drift,nogrowth=nogrowth)
         v      = res[0]
         D      = res[1]
         v[0]   = v[1]
@@ -201,7 +234,7 @@ def two_pop_model_run(x,a_0,time,sig_g,sig_d,v_gas,T,alpha,m_star,V_FRAG,RHO_S,E
 
     progress_bar(100.,'toy model running')
 
-    return [time,solution_d,solution_g,v_bar,vgas,v_0,v_1,a_dr,a_fr,a_df,a_t]
+    return time,solution_d,solution_g,v_bar,vgas,v_0,v_1,a_dr,a_fr,a_df,a_t
 
 
 def two_pop_velocity(t,sigma_d_t,x,sigma_g,v_gas,T,alpha,m_star,a_0,V_FRAG,RHO_S,E_drift,nogrowth=False):
@@ -328,6 +361,10 @@ def two_pop_velocity(t,sigma_d_t,x,sigma_g,v_gas,T,alpha,m_star,a_0,V_FRAG,RHO_S
 def impl_donorcell_adv_diff_delta(n_x,x,Diff,v,g,h,K,L,flim,u_in,dt,pl,pr,ql,qr,rl,rr,coagulation_method,A,B,C,D):
     """
     Implicit donor cell advection-diffusion scheme with piecewise constant values
+    
+    NOTE: The cell centers can be arbitrarily placed - the interfaces are assumed
+    to be in the middle of the "centers", which makes all interface values
+    just the arithmetic mean of the center values.
     
         Perform one time step for the following PDE:
     
