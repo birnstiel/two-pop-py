@@ -6,7 +6,7 @@ def read(fname):
 
 
 setup(name='twopoppy',
-    version='0.1',
+    version='0.2',
     description='two-population dust evolution model according to Birnstiel, Klahr, Ercolano, A&A (2012)',
     long_descrioption=read('README.md'),
     url='http://www.til-birnstiel.de',
