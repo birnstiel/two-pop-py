@@ -30,267 +30,76 @@ results are reproducible, as the code can change.
 
 ------------------------------------------------------------------------------- 
 """
+import gzip, bz2, os
+from uTILities import task_status
+import cPickle
+from .args import args
+from .results import results
 
-class results:
-    nri          = None
-    xi           = None
-    x            = None
-    timesteps    = None
-    T            = None
-    sigma_g      = None
-    sigma_d      = None
-    v_gas        = None
-    v_dust       = None
-    v_0          = None
-    v_1          = None
-    a_dr         = None
-    a_fr         = None
-    a_df         = None
-    a_t          = None
-    args         = None
-    a            = None
-    sig_sol      = None
-    
-    def write(self,dirname=None):
-        """
-        Export data to the specified folder.
-        """
-        import os
-        import numpy as np
-        import model
-        
-        if dirname is None: dirname = args.dir
-        
-        print('\n'+35*'-')
-        print('writing results to {} ...'.format(dirname))
-        if not os.path.isdir(dirname):
-            os.mkdir(dirname)
-        np.savetxt(dirname+os.sep+'sigma_g.dat', self.sigma_g)
-        np.savetxt(dirname+os.sep+'sigma_d.dat', self.sigma_d)
-        np.savetxt(dirname+os.sep+'x.dat',       self.x)
-        np.savetxt(dirname+os.sep+'T.dat',       self.T)
-        np.savetxt(dirname+os.sep+'time.dat',    self.timesteps)
-        np.savetxt(dirname+os.sep+'v_gas.dat',   self.v_gas)
-        np.savetxt(dirname+os.sep+'v_dust.dat',  self.v_dust)
-        np.savetxt(dirname+os.sep+'v_0.dat',     self.v_0)
-        np.savetxt(dirname+os.sep+'v_1.dat',     self.v_1)
-        np.savetxt(dirname+os.sep+'a_dr.dat',    self.a_dr)
-        np.savetxt(dirname+os.sep+'a_fr.dat',    self.a_fr)
-        np.savetxt(dirname+os.sep+'a_df.dat',    self.a_df)
-        np.savetxt(dirname+os.sep+'a_t.dat',     self.a_t)
-        
-        if model.distri_available:
-            np.savetxt(dirname+os.sep+'a.dat',         self.a)
-            np.savetxt(dirname+os.sep+'sigma_d_a.dat', self.sig_sol)
-        
-        self.args.write_args()
+compressors  = {
+    'no match':[open,'raw'],'raw':[open,'raw'],
+    'gzip':[gzip.GzipFile,'pgz'],'gz':[gzip.GzipFile,'pgz'],
+    'bz2':[bz2.BZ2File,'pbz2']}
 
-    def read(self,dirname=None):
-        """
-        Read results from the specified folder.
-        """
-        import os
-        import numpy as np
-        
-        if dirname is None:
-            dirname = self.abs.dir
-            
-        
-        print('\n'+35*'-')
-        print('writing results to {} ...'.format(dirname))
-        if not os.path.isdir(dirname):
-            os.mkdir(dirname)
-        self.sigma_g   = np.loadtxt(dirname+os.sep+'sigma_g.dat')
-        self.sigma_d   = np.loadtxt(dirname+os.sep+'sigma_d.dat')
-        self.x         = np.loadtxt(dirname+os.sep+'x.dat')
-        self.T         = np.loadtxt(dirname+os.sep+'T.dat')
-        self.timesteps = np.loadtxt(dirname+os.sep+'time.dat')
-        self.v_gas     = np.loadtxt(dirname+os.sep+'v_gas.dat')
-        self.v_0       = np.loadtxt(dirname+os.sep+'v_0.dat')
-        self.v_1       = np.loadtxt(dirname+os.sep+'v_1.dat')
-        self.a_dr      = np.loadtxt(dirname+os.sep+'a_dr.dat')
-        self.a_fr      = np.loadtxt(dirname+os.sep+'a_fr.dat')
-        self.a_df      = np.loadtxt(dirname+os.sep+'a_df.dat')
-        self.a_t       = np.loadtxt(dirname+os.sep+'a_t.dat')
-        
-        if os.path.isfile(dirname+os.sep+'a.dat'):
-            self.a       = np.savetxt(dirname+os.sep+'a.dat')
-        if os.path.isfile(dirname+os.sep+'sigma_d_a.dat'):
-            self.sig_sol = np.savetxt(dirname+os.sep+'sigma_d_a.dat')
-        
-        self.args = args()
-        args.read(dirname=dirname)
+def get_compression_type(filename):
+    """
+    Pass a file name. It if looks like it's compressed with one of these
     
-class args:
-    import const as _c
+    - gz
+    - bz2
+    - zip
     
-    # names of all parameters
+    that name will be returned.
+    
+    """
+    magic_dict = {
+        "\x1f\x8b\x08": "gz",
+        "\x42\x5a\x68": "bz2",
+        "\x50\x4b\x03\x04": "zip"
+        }
 
-    varlist = [ ['nr',        int],
-                ['nt',        int],
-                ['tmax',    float],
-                ['alpha',   float],
-                ['d2g',     float],
-                ['mstar',   float],
-                ['tstar',   float],
-                ['rstar',   float],
-                ['rc',      float],
-                ['mdisk',   float],
-                ['rhos',    float],
-                ['vfrag',   float],
-                ['a0',      float],
-                ['gamma',   float],
-                ['edrift',  float],
-                ['T',       float],
-                ['gasevol',  bool],
-                ['tempevol', bool],
-                ['starevol', bool],
-            ]
+    max_len = max(len(x) for x in magic_dict)
     
-    # set default values
-    
-    nr      = 200
-    nt      = 100
-    na      = 150
-    tmax    = 1e6*_c.year
-    alpha   = 1e-3
-    d2g     = 1e-2
-    mstar   = 0.7*_c.M_sun
-    tstar   = 4010.
-    rstar   = 1.806*_c.R_sun
-    rc      = 200*_c.AU
-    mdisk   = 0.1*mstar
-    rhos    = 1.156
-    vfrag   = 1000
-    a0      = 1e-5
-    gamma   = 1.0
-    edrift  = 1.0
+    with open(filename) as f: file_start = f.read(max_len)
+        
+    for magic, filetype in magic_dict.items():
+        if file_start.startswith(magic):
+            return filetype
+    return "no match"
 
-    gasevol  = True
-    tempevol = False
-    starevol = False
-    T        = None
-    dir      = 'data'
+def load_grid_results(fname):
+    """
+    Load list of grid results from file
+    """
+    compressor,suffix = compressors[get_compression_type(fname)]
     
-    def __init__(self,**kwargs):
-        """
-        Initialize arguments. Simulation parameters can be given as keywords.
-        To list all parameters, call `print_args()`. All quantities need to be
-        given in CGS units, even though they might be printed by `print_args`
-        using other units.
-        """
-        import warnings
-        for k,v in kwargs.iteritems():
-            if hasattr(self,k):
-                setattr(self,k,v)
-            else:
-                warnings.warn("No such argument")
+    with task_status('Loading {}-file \'{}\''.format(suffix,fname)), compressor(fname) as f: res=cPickle.load(f)
+    return res
     
-    def __str__(self):
-        """
-        String representation of arguments
-        """
-        from const import year, M_sun, R_sun, AU
-        s = ''
-        s+=35*'-'+'\n'
-        
-        conversion = {
-            'nr':      [1,            ''],
-            'nt':      [1,            ''],
-            'tmax':    [1/year,       'years'],
-            'alpha':   [1,            ''],
-            'd2g':     [1,            ''],
-            'mstar':   [1/M_sun,      'solar masses'],
-            'tstar':   [1,            'K'],
-            'rstar':   [1/R_sun,      'R_sun'],
-            'rc':      [1/AU,         'AU'],
-            'mdisk':   [1/self.mstar, 'M_star'],
-            'rhos':    [1,            'g/cm^3'],
-            'vfrag':   [1,            'cm/s'],
-            'a0':      [1,            'cm'],
-            'gamma':   [1,            ''],
-            'edrift':  [1,            '']
-            }
-        
-        for n,conv_unit in conversion.iteritems():
-            conv,unit = conv_unit
-            value     = getattr(self, n)
-            isarray   = hasattr(value, '__len__')
-            if isarray:
-                s+=n.ljust(17)+' = '+'[{:3.2g} ... {:3.2g}]'.format(conv*value[0],conv*value[-1]).rjust(15)+' '+unit+'\n'
-            else:
-                s+=n.ljust(17)+' = '+'{:3.2g}'.format(conv*value).rjust(15)+' '+unit+'\n'
-            
-        # print other arguments
-            
-        s += 'Gas         evol.'.ljust(17)+' = '+(self.gasevol *'on'+(not self.gasevol )*'off').rjust(15)+'\n'
-        s += 'Temperature evol.'.ljust(17)+' = '+(self.tempevol*'on'+(not self.tempevol)*'off').rjust(15)+'\n'
-        s += 'Stellar     evol.'.ljust(17)+' = '+(self.starevol*'on'+(not self.starevol)*'off').rjust(15)+'\n'
-        
-        if self.T is None:
-            s += 'Temperature'.ljust(17)+' = '+'None'.rjust(15)
-        elif hasattr(self.T,'__call__'):
-            s += 'Temperature'.ljust(17)+' = '+'function'.rjust(15)
-        else:
-            s += 'Temperature'.ljust(17)+' = '+'{}'.format(self.T).rjust(15)
-        
-        s += '\n'+35*'-'+'\n'
-        return s
-        
-    def print_args(self):
-        print(self.__str__())
+def write_grid_results(res,fname,compression='gzip'):
+    """
+    Write list of grid results to file.
     
-    def write_args(self):
-        """
-        Write out the simulation parameters to the file 'parameters.ini' in the
-        folder specified in args.dir
-        """
-        import configobj, os
-        if not os.path.isdir(self.dir): os.mkdir(self.dir)
-        parser = configobj.ConfigObj()
-        parser.filename = self.dir+os.sep+'parameters.ini'
-
-        for name,_ in self.varlist: parser[name] = getattr(self, name)
-
-        parser.write()
-
-    def read_args(self):
-        """
-        Read in the simulation parameters from the file 'parameters.ini' in the
-        folder specified in args.dir
-        """
-        import configobj, os, numpy
-        parser = configobj.ConfigObj(self.dir+os.sep+'parameters.ini')
+    Arguments:
+    ----------
+    
+    res : list
+        list of two_pop_run.results instances
         
-        varlist = {v[0]:v[1] for v in self.varlist}
+    fname : string
+        filename to write to
         
-        for name,val in parser.iteritems():
-            if name not in varlist:
-                print('Unknown Parameter:{}'.format(name))
-                continue
-            
-            t = varlist[name]
-            
-            # process ints, bools, floats and lists of them
-            
-            if t in [int,bool,float]:
-                if type(val) is list:
-                    # lists
-                    setattr(self, name, [t(v) for v in val])
-                elif '[' in val:
-                    # numpy arrays
-                    val = val.replace('[','').replace(']','').replace('\n',' ')
-                    val = [t(v) for v in val.split()]
-                    setattr(self, name, numpy.array(val))
-                else:
-                    # plain values
-                    setattr(self, name, t(val))
-            else:
-                # stings and nones
-                if val=='None':
-                    val = None
-                else:
-                    setattr(self,name,val)
+    Keywords:
+    ---------
+    
+    compression : string
+        possible compression mechanisms are 'raw', 'pgz', 'pbz2'.
+    """
+    if compression not in compressors.keys():
+        raise NameError('{} is not a defined compression method'.format(compression))
+    compressor,suffix = compressors[compression]
+    fname = os.path.splitext(fname)[0]+os.path.extsep+suffix
+    with task_status('Writing {}-file \'{}\''.format(suffix,fname)), compressor(fname,'w') as f: cPickle.dump(res,f)
 
 def lbp_solution(R,gamma,nu1,mstar,mdisk,RC0,time=0):
     """

@@ -1,3 +1,4 @@
-__all__ = ['const','model','wrapper']
+__all__ = ['const','grid','model','wrapper']
 from ._version import __version__
-from .wrapper import args, results, model_wrapper, main
+from .wrapper import model_wrapper, main
+from .args import args
