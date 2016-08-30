@@ -672,8 +672,9 @@ def main():
     
     ARGS = args()
     for name,_ in ARGS.varlist:
-        setattr(ARGS,name,getattr(ARGSIN, name))
+        if hasattr(ARGSIN,name):
+            setattr(ARGS,name,getattr(ARGSIN, name))
         
     # call the wrapper
     
-    model_wrapper(ARGS,save=True)
+    model_wrapper(ARGS,save=True,plot=ARGSIN.p)

@@ -17,6 +17,7 @@ setup(name='twopoppy',
     include_package_data=True,
     install_requires=[
         'astropy',
+        'configobj',
         'scipy',
         'numpy',
         'matplotlib'
