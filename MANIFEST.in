@@ -2,4 +2,4 @@ include tests/*.ipynb
 include README.md
 include LICENSE
 include Makefile
-include twopopy/version.py
+include twopopy/_version.py
