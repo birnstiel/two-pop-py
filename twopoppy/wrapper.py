@@ -566,7 +566,7 @@ def model_wrapper(ARGS,plot=False,save=False):
     print('\n'+35*'-')
     return res
     
-def run_test():
+def model_wrapper_test():
     """
     Test gas evolution: use small rc and large alpha
     """
@@ -577,7 +577,7 @@ def run_test():
     res        = model_wrapper(Args)
     return res
 
-def plot_test(res):
+def model_wrapper_test_plot(res):
     """
     Plot the test result
     """

@@ -7,3 +7,4 @@ data/
 distribution_reconstruction.py
 aux_functions.py
 .ipynb_checkpoints/
+twopoppy.egg-info

@@ -1,4 +1,4 @@
-def model_run(x,a_0,time,sig_g,sig_d,v_gas,T,alpha,m_star,V_FRAG,RHO_S,E_drift,nogrowth=False,gasevol=True):
+def run(x,a_0,time,sig_g,sig_d,v_gas,T,alpha,m_star,V_FRAG,RHO_S,E_drift,nogrowth=False,gasevol=True):
     """
     This function evolves the two population model (all model settings
     are stored in velocity). It returns the important parameters of
@@ -7,39 +7,88 @@ def model_run(x,a_0,time,sig_g,sig_d,v_gas,T,alpha,m_star,V_FRAG,RHO_S,E_drift,n
     
     Arguments:
     ----------
-    x               = radial grid (nr)                [cm]
-    a_0             = monomer size                    [cm]
-    time            = time of snapshots (nt)          [s]
-    sig_g           = gas  surface density (nr)       [g cm^-2]
-    sig_d           = dust surface density (nr)       [g cm^-2]
-    v_gas           = gas velocity (nr)               [cm/s]
-    T               = temperature array (nr)/function [K]
-    alpha           = turbulence parameter (nr)       [-]
-    m_star          = stellar mass (nt)               [g]
-    V_FRAG          = fragmentation velocity          [cm s^-1]
-    RHO_S           = internal density of the dust    [g cm^-3]
-    E_drift         = drift efficiency                [-]
+    x : array
+        radial grid (nr)                [cm]
+
+    a_0 : float
+        monomer size                    [cm]
+
+    time : array
+        time of snapshots (nt)          [s]
+
+    sig_g : array
+        gas surface density (nr)        [g cm^-2]
+
+    sig_d : array
+        dust surface density (nr)       [g cm^-2]
+
+    v_gas : array
+        gas velocity (nr)               [cm/s]
+
+    T : array
+        temperature array (nr)/function [K]
+
+    alpha : array
+        turbulence parameter (nr)       [-]
+
+    m_star : float
+        stellar mass (nt)               [g]
+
+    V_FRAG : float
+        fragmentation velocity          [cm s^-1]
+
+    RHO_S : float
+        internal density of the dust    [g cm^-3]
+
+    E_drift : float
+        drift efficiency                [-]
+
         
     Keywords:
     ---------
     
-    nogrowth        = true: particle size fixed to a0 [False]
-    gasevol         = turn gas evolution on/off       [True]
+    nogrowth : bool
+        true: particle size fixed to a0 [False]
+
+    gasevol : bool
+        turn gas evolution on/off       [True]
+
     
     Returns:
     ---------
     
-    time       = snap shot time           (nt,nr)       [s]
-    solution_d = dust surface density     (nt,nr)       [g cm^-2]
-    solution_g = dust surface density     (nt,nr)       [g cm^-2]
-    v_bar      = dust velocity            (nt,nr)       [cm s^-1]
-    v_gas      = gas velocity             (nt,nr)       [cm s^-1]
-    v_0        = small dust velocity      (nt,nr)       [cm s^-1]
-    v_1        = large dust velocity      (nt,nr)       [cm s^-1]
-    a_dr       = drift size limit         (nt,nr)       [cm]
-    a_fr       = fragmentation size limit (nt,nr)       [cm]
-    a_df       = drift-ind. frag. limit   (nt,nr)       [cm]
-    a_t        = the time dependent limit (nt,nr)       [cm]
+    time : array
+        snapshot time            (nt)          [s]
+
+    solution_d : array
+        dust surface density     (nt,nr)       [g cm^-2]
+
+    solution_g : array
+        dust surface density     (nt,nr)       [g cm^-2]
+
+    v_bar : array
+        dust velocity            (nt,nr)       [cm s^-1]
+
+    v_gas : array
+        gas velocity             (nt,nr)       [cm s^-1]
+
+    v_0 : array
+        small dust velocity      (nt,nr)       [cm s^-1]
+
+    v_1 : array
+        large dust velocity      (nt,nr)       [cm s^-1]
+
+    a_dr : array
+        drift size limit         (nt,nr)       [cm]
+
+    a_fr : array
+        fragmentation size limit (nt,nr)       [cm]
+
+    a_df : array
+        drift-ind. frag. limit   (nt,nr)       [cm]
+
+    a_t : array
+        the time dependent limit (nt,nr)       [cm]
     
     Note:
     -----
@@ -109,7 +158,7 @@ def model_run(x,a_0,time,sig_g,sig_d,v_gas,T,alpha,m_star,V_FRAG,RHO_S,E_drift,n
     #
     # save the velocity which will be used
     #
-    res  = velocity(t,solution_d[0,:],x,sig_g,v_gas,Tfunc(x,locals()),alpha,m_star,a_0,V_FRAG,RHO_S,E_drift,nogrowth=nogrowth)
+    res  = get_velocity(t,solution_d[0,:],x,sig_g,v_gas,Tfunc(x,locals()),alpha,m_star,a_0,V_FRAG,RHO_S,E_drift,nogrowth=nogrowth)
     v_bar[0,:] = res[0]
     Diff[0,:]  = res[1]
     v_0[0,:]   = res[2]
@@ -142,7 +191,7 @@ def model_run(x,a_0,time,sig_g,sig_d,v_gas,T,alpha,m_star,V_FRAG,RHO_S,E_drift,n
         
         # calculate the velocity
         
-        res    = velocity(t,u_in/x,x,sig_g,v_gas,_T,alpha,m_star,a_0,V_FRAG,RHO_S,E_drift,nogrowth=nogrowth)
+        res    = get_velocity(t,u_in/x,x,sig_g,v_gas,_T,alpha,m_star,a_0,V_FRAG,RHO_S,E_drift,nogrowth=nogrowth)
         v      = res[0]
         D      = res[1]
         v[0]   = v[1]
@@ -237,43 +286,81 @@ def model_run(x,a_0,time,sig_g,sig_d,v_gas,T,alpha,m_star,V_FRAG,RHO_S,E_drift,n
     return time,solution_d,solution_g,v_bar,vgas,v_0,v_1,a_dr,a_fr,a_df,a_t
 
 
-def velocity(t,sigma_d_t,x,sigma_g,v_gas,T,alpha,m_star,a_0,V_FRAG,RHO_S,E_drift,nogrowth=False):
+def get_velocity(t,sigma_d_t,x,sigma_g,v_gas,T,alpha,m_star,a_0,V_FRAG,RHO_S,E_drift,nogrowth=False):
     """
     This model takes a snapshot of temperature, gas surface density and so on
     and calculates values of the representative sizes and velocities which are
     used in the two population model.
     
-    USAGE:
-    [v_bar,D,v_0,v_1,a_max_t,a_df,a_fr,a_dr] = ...
-    velocity(t,sigma_d_t,x,sigma_g,v_gas,T,alpha,m_star,a_0,V_FRAG,RHO_S,E_drift)
+   
+    Arguments:
+    ----------
+    t : float
+        time at which to calculate the values  [s]
+        
+    sigma_d_t : array-like
+        current dust surface density array (nr)[g cm^-2]
+        
+    x : array-like
+        nr radial grid points (nr)             [cm]
+                
+    sigma_g : array-like
+        gas surface density (nr)               [g cm^-2]
+        
+    v_gas : array-like
+        gas radial velocity (nr)               [cm s^-1]
+        
+    T : array-like
+        temperature (nr)                       [K]
+        
+    alpha : array-like
+        turbulence parameter (nr)              [-]
+        
+    m_star : float
+        stellar mass                           [g]
+        
+    a_0 : float
+        monomer size                           [cm]
+        
+    V_FRAG : float
+        fragmentation velocity                 [cm s^-1]
+        
+    RHO_S : float
+        dust internal density                  [g cm^-3]
+        
+    E_drift : float
+        drift efficiency                       [-]
     
-    WHERE:
-        t            = time at which to calculate the values  [s]
-        sigma_d_t    = current dust surface density array (nr)[g cm^-2]
-        x            = nr radial grid points (nr)             [cm]
-        timesteps    = times of the snapshots (nt)            [s]
-        sigma_g      = gas surface density (nr)               [g cm^-2]
-        v_gas        = gas radial velocity (nr)               [cm s^-1]
-        T            = temperature snapshots (nr)             [K]
-        alpha        = turbulence parameter (nr)              [-]
-        m_star       = stellar mass                           [g]
-        a_0          = monomer size                           [cm]
-        V_FRAG       = fragmentation velocity                 [cm s^-1]
-        RHO_S        = dust internal density                  [g cm^-3]
-        E_drift      = drift efficiency                       [-]
+    Keywords:
+    ---------
     
-    KEYWORD:
-        nogrowth     = wether a fixed particle size is used   [False]
+    nogrowth : bool
+        wether a fixed particle size is used   [False]
     
-    RETURNS:
-        v_bar        = the mass averaged velocity (nt,nr)         [cm s^-1]
-        D            = t-interpolated diffusivity (nt,nr)         [cm^2 s^-1]
-        v_0          = t-interpolated vel. of small dust (nt,nr)  [cm s^-1]
-        v_1          = t-interpolated vel. of large dust (nt,nr)  [cm s^-1]
-        a_max_t      = maximum grain size (nt,nr)                 [cm]
-        a_df         = the fragmentation-by-drift limit (nt,nr)   [cm]
-        a_fr         = the fragmentation limit (nt,nr)            [cm]
-        a_dr         = the drift limit (nt,nr)                    [cm]
+    Returns:
+    --------
+    v_bar : array
+        the mass averaged velocity (nr)         [cm s^-1]
+        
+    D : array
+        t-interpolated diffusivity (nr)         [cm^2 s^-1]
+
+    v_0 : array
+        t-interpolated vel. of small dust (nr)  [cm s^-1]
+        
+    v_1 : array
+        t-interpolated vel. of large dust (nr)  [cm s^-1]
+        
+    a_max_t : array
+        maximum grain size (nr)                 [cm]
+
+    a_df : array
+        the fragmentation-by-drift limit (nr)   [cm]
+        
+    a_fr : array
+        the fragmentation limit (nr)            [cm]
+        
+    a_dr : the drift limit (nr)                 [cm]
     """
     fudge_fr = 0.37
     fudge_dr = 0.55
@@ -377,22 +464,49 @@ def impl_donorcell_adv_diff_delta(n_x,x,Diff,v,g,h,K,L,flim,u_in,dt,pl,pr,ql,qr,
             dgu/h |            |
           p ----- |      + q u |       = r
              dx   |x=xbc       |x=xbc
+             
     Arguments:
-          n_x   = # of grid points
-          x     = the grid
-          Diff  = value of Diff @ cell center
-          v     = the values for v @ interface (array[i] = value @ i-1/2)
-          g     = the values for g(x)
-          h     = the values for h(x)
-          K     = the values for K(x)
-          L     = the values for L(x)
-          flim  = diffusion flux limiting factor at interfaces
-          u     = the current values of u(x)
-          dt    = the time step
+    ----------
+    n_x : int
+        number of grid points
+
+    x : array-like
+        the grid
+
+    Diff : array-like
+        value of Diff @ cell center
+
+    v : array-like
+        the values for v @ interface (array[i] = value @ i-1/2)
+
+    g : array-like
+        the values for g(x)
+
+    h : array-like
+        the values for h(x)
+
+    K : array-like
+        the values for K(x)
+
+    L : array-like
+        the values for L(x)
+
+    flim : array-like
+        diffusion flux limiting factor at interfaces
+
+    u : array-like
+        the current values of u(x)
+
+    dt : float
+        the time step
+
     
-    OUTPUT:
-          u     = the updated values of u(x) after timestep dt
+    Output:
+    -------
     
+    u : array-like
+        the updated values of u(x) after timestep dt
+
     """
     from numpy import zeros
     D05=zeros(n_x)
@@ -479,7 +593,7 @@ def tridag(a,b,c,r,n):
     """
     Solves a tridiagnoal matrix equation
     
-    M * u  =  r
+        M * u  =  r
     
     where M is tridiagonal, and u and r are vectors of length n.
     
@@ -487,25 +601,25 @@ def tridag(a,b,c,r,n):
     ----------
     
     a : array
-    :    lower diagonal entries
+        lower diagonal entries
     
     b : array
-    :    diagonal entries
+        diagonal entries
     
     c : array
-    :    upper diagonal entries
+        upper diagonal entries
     
     r : array
-    :    right hand side vector
+        right hand side vector
     
     n : int
-    size of the vectors
+        size of the vectors
     
     Returns:
     --------
     
     u : array
-    :    solution vector
+        solution vector
     """
     import numpy as np
     
@@ -541,15 +655,15 @@ def progress_bar(perc,text=''):
     ----------
     
     perc : float
-    :    The percentage of completion, should be
-         between 0 and 100. Only 100.0 finishes with the
-         word "Done!".
+        The percentage of completion, should be
+        between 0 and 100. Only 100.0 finishes with the
+        word "Done!".
          
     Keywords:
     ---------
     
     text : str
-    :    Possible text for describing the running process.
+        Possible text for describing the running process.
     
     Example:
     --------
