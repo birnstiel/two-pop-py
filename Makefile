@@ -13,3 +13,5 @@ clean:
 clobber: clean
 	-rm -rf data
 	-rm -rf *.pyc
+	-rm -rf twopoppy.egg-info
+	-rm -rf twopoppy/*.pyc
