@@ -43,7 +43,7 @@ The following files are created:
 
 ### Package dependencies
 
-`astropy`, `numpy`, `scipy`
+`astropy`, `numpy`, `scipy`, `configobj`
 
 ### Upcoming features:
 
