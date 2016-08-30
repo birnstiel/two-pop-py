@@ -383,7 +383,7 @@ def lbp_solution(R,gamma,nu1,mstar,mdisk,RC0,time=0):
 
 def model_wrapper(ARGS,plot=False,save=False):
     """
-    This is a wrapper for the two-population model `model.model_run`, in which
+    This is a wrapper for the two-population model `model.run`, in which
     the disk profile is a self-similar solution.
     
     Arguments:
@@ -479,7 +479,7 @@ def model_wrapper(ARGS,plot=False,save=False):
     
     # call the model
     
-    TI,SOLD,SOLG,VD,VG,v_0,v_1,a_dr,a_fr,a_df,a_t = model.model_run(x,a0,timesteps,sigma_g,sigma_d,v_gas,T,alpha*np.ones(nr),mstar,vfrag,rhos,edrift,nogrowth=False,gasevol=gasevol)
+    TI,SOLD,SOLG,VD,VG,v_0,v_1,a_dr,a_fr,a_df,a_t = model.run(x,a0,timesteps,sigma_g,sigma_d,v_gas,T,alpha*np.ones(nr),mstar,vfrag,rhos,edrift,nogrowth=False,gasevol=gasevol)
     #
     # ================================
     # RECONSTRUCTING SIZE DISTRIBUTION
@@ -579,10 +579,9 @@ def model_wrapper_test():
 
 def model_wrapper_test_plot(res):
     """
-    Plot the test result
+    Plot the test result and returns the figure.
     """
     from const import Grav, m_p, mu, k_b, year, AU
-    import run
     import numpy as np
     import matplotlib.pyplot as plt
     from matplotlib.pyplot import style
@@ -607,8 +606,8 @@ def model_wrapper_test_plot(res):
     cs1 = np.sqrt(k_b*temp[0]/mu/m_p)
     om1 = np.sqrt(Grav*mstar/x[0]**3)
     nu1 = alpha*cs1**2/om1
-    siga_0,_ = run.lbp_solution(x,gamma,nu1,mstar,mdisk,rc)
-    siga_1,_ = run.lbp_solution(x,gamma,nu1,mstar,mdisk,rc,time=t)
+    siga_0,_ = lbp_solution(x,gamma,nu1,mstar,mdisk,rc)
+    siga_1,_ = lbp_solution(x,gamma,nu1,mstar,mdisk,rc,time=t)
     
     # compare results against analytical solution
     
@@ -625,7 +624,7 @@ def model_wrapper_test_plot(res):
     for ax in axs:
         ax.set_xlabel('r [AU]')
         ax.set_ylabel('$\Sigma_\mathrm{g}$ [g cm$^{-2}$]');
-    f.savefig('test.pdf')
+    return f
     
 def main():
     import argparse
