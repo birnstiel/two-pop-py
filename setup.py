@@ -21,4 +21,9 @@ setup(name='twopoppy',
         'numpy',
         'matplotlib'
         ],
+    entry_points={
+        'console_scripts': [
+            'twopoppy=twopoppy:main',
+        ]
+    },
     zip_safe=False)

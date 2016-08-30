@@ -627,7 +627,7 @@ def model_wrapper_test_plot(res):
         ax.set_ylabel('$\Sigma_\mathrm{g}$ [g cm$^{-2}$]');
     f.savefig('test.pdf')
     
-if __name__=='__main__':
+def main():
     import argparse
     import const as c
     #
