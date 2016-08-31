@@ -117,15 +117,23 @@ class args:
     def print_args(self):
         print(self.__str__())
     
-    def write_args(self):
+    def write_args(self,fname=None):
         """
         Write out the simulation parameters to the file 'parameters.ini' in the
-        folder specified in args.dir
+        folder specified in args.dir or to fname if that is not None
         """
         import configobj, os
-        if not os.path.isdir(self.dir): os.mkdir(self.dir)
+        if fname is None:
+            fname  = os.path.abspath(os.path.expanduser(fname))
+            folder = os.path.dirname(fname)
+            fname  = os.path.basename(fname)
+        else:
+            folder = self.dir
+            fname  = 'parameters.ini'
+            
+        if not os.path.isdir(folder): os.mkdir(folder)
         parser = configobj.ConfigObj()
-        parser.filename = self.dir+os.sep+'parameters.ini'
+        parser.filename = os.path.join(folder,fname)
 
         for name,_ in self.varlist: parser[name] = getattr(self, name)
 
