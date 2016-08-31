@@ -124,12 +124,12 @@ class args:
         """
         import configobj, os
         if fname is None:
+            folder = self.dir
+            fname  = 'parameters.ini'
+        else:
             fname  = os.path.abspath(os.path.expanduser(fname))
             folder = os.path.dirname(fname)
             fname  = os.path.basename(fname)
-        else:
-            folder = self.dir
-            fname  = 'parameters.ini'
             
         if not os.path.isdir(folder): os.mkdir(folder)
         parser = configobj.ConfigObj()
