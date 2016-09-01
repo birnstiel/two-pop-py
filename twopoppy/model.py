@@ -693,16 +693,27 @@ _gitpath         = 'https://raw.githubusercontent.com/birnstiel/Birnstiel2015_sc
 try:
     from distribution_reconstruction import reconstruct_size_distribution
     distri_available=True
-except (ImportError,SyntaxError):
-    import os      as _os
-    import inspect as _inspect
-    import urllib  as _urllib
+except (ImportError, SyntaxError):
+    import os        as _os
+    import inspect   as _inspect
+    import urllib    as _urllib
+    import ssl       as _ssl
+    import warnings  as _warnings
+    import traceback as _traceback
     
     print('could not import distribution_reconstruction.py, will download it and retry')
     
     _module_path = _os.path.dirname(_os.path.abspath(_inspect.getfile(_inspect.currentframe())))
     for _file in _helperfiles:
-        open(_module_path+_os.sep+_file, 'wb').write(_urllib.urlopen(_gitpath+_file).read())
+        try:
+            ctx = _ssl.create_default_context()
+            ctx.check_hostname = False
+            ctx.verify_mode = _ssl.CERT_NONE
+            open(_module_path+_os.sep+_file, 'wb').write(_urllib.urlopen(_gitpath+_file,context=ctx).read())
+        except Exception, err:
+            _warnings.warn('Could not download {}'.format(_file))
+            for s in _traceback.format_exc().split('\n'):  print(4*' '+s)
+            
     try:
         from distribution_reconstruction import reconstruct_size_distribution
         distri_available=True
