@@ -294,13 +294,13 @@ def model_wrapper(ARGS,plot=False,save=False):
     # RECONSTRUCTING SIZE DISTRIBUTION
     # ================================
     #
+    a  = np.logspace(np.log10(a0),np.log10(5*a_t.max()),n_a)
     print('\n'+35*'-')
     if model.distri_available:
         try:
             print('reconstructing size distribution')
             reconstruct_size_distribution = model.reconstruct_size_distribution
             it = -1
-            a  = np.logspace(np.log10(a0),np.log10(5*a_t.max()),n_a)
             sig_sol,_,_,_,_,_ = reconstruct_size_distribution(x,a,TI[it],SOLG[it],SOLD[-1],alpha*np.ones(nr),rhos,T,mstar,vfrag,a_0=a0)
         except Exception, _:
             import traceback,warnings
