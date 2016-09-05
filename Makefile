@@ -5,10 +5,8 @@ all:
 clean: 
 	-rm aux_functions.py
 	-rm aux_functions.pyc
-	-rm const.pyc
 	-rm distribution_reconstruction.py
 	-rm distribution_reconstruction.pyc
-	-rm two_pop_model.pyc
 	
 clobber: clean
 	-rm -rf data
