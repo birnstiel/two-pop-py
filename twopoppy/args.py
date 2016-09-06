@@ -12,6 +12,9 @@ class args:
                 ['tstar',   float],
                 ['rstar',   float],
                 ['rc',      float],
+                ['rt',      float],
+                ['r0',      float],
+                ['r1',      float],
                 ['mdisk',   float],
                 ['rhos',    float],
                 ['vfrag',   float],
@@ -36,6 +39,9 @@ class args:
     tstar   = 4010.
     rstar   = 1.806*_c.R_sun
     rc      = 200*_c.AU
+    rt      = 1e6*_c.AU
+    r0      = 0.05*_c.AU
+    r1      = 3e3*_c.AU
     mdisk   = 0.1*mstar
     rhos    = 1.156
     vfrag   = 1000
@@ -67,20 +73,24 @@ class args:
         """
         String representation of arguments
         """
-        from const import year, M_sun, R_sun, AU
+        from .const import year, M_sun, R_sun, AU
+        from numbers import Number
+        
         s = ''
-        s+=35*'-'+'\n'
+        s+=48*'-'+'\n'
         
         conversion = {
             'nr':      [1,            ''],
             'nt':      [1,            ''],
             'tmax':    [1/year,       'years'],
-            'alpha':   [1,            ''],
             'd2g':     [1,            ''],
             'mstar':   [1/M_sun,      'solar masses'],
             'tstar':   [1,            'K'],
             'rstar':   [1/R_sun,      'R_sun'],
             'rc':      [1/AU,         'AU'],
+            'rt':      [1/AU,         'AU'],
+            'r0':      [1/AU,         'AU'],
+            'r1':      [1/AU,         'AU'],
             'mdisk':   [1/self.mstar, 'M_star'],
             'rhos':    [1,            'g/cm^3'],
             'vfrag':   [1,            'cm/s'],
@@ -103,6 +113,8 @@ class args:
         s += 'Gas         evol.'.ljust(17)+' = '+(self.gasevol *'on'+(not self.gasevol )*'off').rjust(15)+'\n'
         s += 'Temperature evol.'.ljust(17)+' = '+(self.tempevol*'on'+(not self.tempevol)*'off').rjust(15)+'\n'
         s += 'Stellar     evol.'.ljust(17)+' = '+(self.starevol*'on'+(not self.starevol)*'off').rjust(15)+'\n'
+
+        # print temperature
         
         if self.T is None:
             s += 'Temperature'.ljust(17)+' = '+'None'.rjust(15)
@@ -110,8 +122,18 @@ class args:
             s += 'Temperature'.ljust(17)+' = '+'function'.rjust(15)
         else:
             s += 'Temperature'.ljust(17)+' = '+'{}'.format(self.T).rjust(15)
+        s+='\n'
+            
+        # print alpha
+
+        if isinstance(self.alpha,Number):
+            s += 'alpha'.ljust(17)+' = '+'{}'.format(self.alpha).rjust(15)
+        elif hasattr(self.alpha,'__call__'):
+            s += 'alpha'.ljust(17)+      ' = '+'function'.rjust(15)
+        else:
+            s += 'alpha'.ljust(17)+' = '+'{}'.format(self.alpha).rjust(15)
         
-        s += '\n'+35*'-'+'\n'
+        s += '\n'+48*'-'+'\n'
         return s
         
     def print_args(self):

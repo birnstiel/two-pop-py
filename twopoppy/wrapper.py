@@ -216,6 +216,7 @@ def model_wrapper(ARGS,plot=False,save=False):
     import model
     from matplotlib    import pyplot as plt
     from const         import AU, year, Grav, k_b, mu, m_p
+    from numbers       import Number
     #
     # set parameters according to input
     #
@@ -229,6 +230,9 @@ def model_wrapper(ARGS,plot=False,save=False):
     tstar    = ARGS.tstar
     rstar    = ARGS.rstar
     rc       = ARGS.rc
+    rt       = ARGS.rt
+    r0       = ARGS.r0
+    r1       = ARGS.r1
     mdisk    = ARGS.mdisk
     rhos     = ARGS.rhos
     vfrag    = ARGS.vfrag
@@ -254,7 +258,7 @@ def model_wrapper(ARGS,plot=False,save=False):
     # create grids and temperature
     #
     nri           = nr+1
-    xi            = np.logspace(np.log10(0.05),np.log10(3e3),nri)*AU
+    xi            = np.logspace(np.log10(r0),np.log10(r1),nri)
     x             = 0.5*(xi[1:]+xi[:-1])
     timesteps     = np.logspace(4,np.log10(tmax/year),nt)*year
     if starevol:
@@ -273,22 +277,38 @@ def model_wrapper(ARGS,plot=False,save=False):
     
     # set the initial surface density & velocity according Lynden-Bell & Pringle solution
     
-    if type(alpha*1.0) is float:
-        alpha   = alpha*(x/x[0])**(gamma-1)
-    else:
-        print('alpha given as array, ignoring gamma in setting alpha')
-    om1     = np.sqrt(Grav*args.mstar/x[0]**3)
-    cs1     = np.sqrt(k_b*T[0]/mu/m_p)
-    nu1     = args.alpha*cs1**2/om1
+    if isinstance(alpha, (list, tuple, np.ndarray)):
+        alpha_fct = lambda x,locals_: alpha
+        print('alpha given as array, ignoring gamma index when setting alpha')
+    elif hasattr(alpha,'__call__'):
+        alpha_fct = alpha
+    elif isinstance(alpha,Number):
+        alpha_fct = lambda x,locals_: alpha*(x/x[0])**(gamma-1)
     
-    sigma_g,_ = lbp_solution(x, gamma, nu1, mstar, mdisk, rc)
+    try:  
+        # this one could break if alpha_function works only in model.run
+        om1       = np.sqrt(Grav*args.mstar/x[0]**3)
+        cs1       = np.sqrt(k_b*T[0]/mu/m_p)
+        nu1       = alpha_fct(x,locals())*cs1**2/om1
+        sigma_g,_ = lbp_solution(x, gamma, nu1, mstar, mdisk, rc)
+        v_gas     = -3.0*alpha_fct(x,locals())*k_b*T/mu/m_p/2./np.sqrt(Grav*mstar/x)*(1.+7./4.)
+    except:
+        sigma_g   = mdisk*(2.-gamma)/(2.*np.pi*rc**2)*(x/rc)**-gamma*np.exp(-(x/rc)**(2.-gamma))
+        v_gas     = np.zeros(sigma_g.shape)
+        
+    # truncation
+        
+    sigma_g[x>=rt] = 1e-100
+        
+    # normalize disk mass
+     
     sigma_g = np.maximum(sigma_g,1e-100)
+    sigma_g = sigma_g/np.trapz(2*np.pi*x*sigma_g,x=x)*mdisk
     sigma_d = sigma_g*d2g
-    v_gas   = -3.0*alpha*k_b*T/mu/m_p/2./np.sqrt(Grav*mstar/x)*(1.+7./4.)
     
     # call the model
     
-    TI,SOLD,SOLG,VD,VG,v_0,v_1,a_dr,a_fr,a_df,a_t = model.run(x,a0,timesteps,sigma_g,sigma_d,v_gas,T,alpha*np.ones(nr),mstar,vfrag,rhos,edrift,nogrowth=False,gasevol=gasevol)
+    TI,SOLD,SOLG,VD,VG,v_0,v_1,a_dr,a_fr,a_df,a_t,Tout,alphaout = model.run(x,a0,timesteps,sigma_g,sigma_d,v_gas,T,alpha_fct,mstar,vfrag,rhos,edrift,nogrowth=False,gasevol=gasevol)
     #
     # ================================
     # RECONSTRUCTING SIZE DISTRIBUTION
@@ -319,7 +339,17 @@ def model_wrapper(ARGS,plot=False,save=False):
     res.sigma_g   = SOLG
     res.sigma_d   = SOLD
     res.x         = x
-    res.T         = T
+    
+    if hasattr(T,'__call__'):
+        res.T = Tout
+    else:
+        res.T = T
+        
+    if hasattr(alpha,'__call__'):
+        res.alpha = alphaout
+    else:
+        res.alpha = alpha
+        
     res.timesteps = timesteps
     res.v_gas     = VG
     res.v_dust    = VD
@@ -330,10 +360,11 @@ def model_wrapper(ARGS,plot=False,save=False):
     res.a_df      = a_df
     res.a_t       = a_t
     res.args      = ARGS
+    res.a         = a
     
     if model.distri_available:
-        res.a       = a
         res.sig_sol = sig_sol
+        
     if save: res.write()
     #
     # ========
@@ -457,6 +488,7 @@ def main():
     PARSER.add_argument('-tstar', help='stellar temperature [K]',              type=float, default=4010.)
     PARSER.add_argument('-rstar', help='stellar radius [solar radii]',         type=float, default=1.806)
     PARSER.add_argument('-rc',    help='disk characteristic radius [AU]',      type=float, default=200)
+    PARSER.add_argument('-rt',    help='outer disk truncation radius [AU]',    type=float, default=1e6)
     PARSER.add_argument('-mdisk', help='disk mass in central star masses',     type=float, default=0.1)
     PARSER.add_argument('-rhos',  help='bulk density of the dusg [ g cm^-3]',  type=float, default=1.156)
     PARSER.add_argument('-vfrag', help='fragmentation velocity [ cm s^-1]',    type=float, default=1000)
@@ -475,6 +507,7 @@ def main():
     ARGSIN.mstar *= c.M_sun
     ARGSIN.rstar *= c.R_sun
     ARGSIN.rc    *= c.AU
+    ARGSIN.rt    *= c.AU
     ARGSIN.mdisk *= ARGSIN.mstar
     
     # convert to arguments object

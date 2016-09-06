@@ -93,10 +93,10 @@ def run(x,a_0,time,sig_g,sig_d,v_gas,T,alpha,m_star,V_FRAG,RHO_S,E_drift,nogrowt
     Note:
     -----
     
-    the temperature can be an array (wit nr elements) or it can be a function
-    that function is always just called with two arguments r and locals(). This
-    allows the user to access local information like surface density if
-    necessary (nonsense-example):
+    the temperature (and also alpha) can be an array (with nr elements) or it
+    can be a function that function is always just called with two arguments r
+    and locals(). This allows the user to access local information like surface
+    density if necessary (nonsense-example):
 
         def T(x,locals_):
             return 10*(x/x[-1])**-1.5 * locals_['sig_g']/locals_['sig_g'][-1]
@@ -141,6 +141,8 @@ def run(x,a_0,time,sig_g,sig_d,v_gas,T,alpha,m_star,V_FRAG,RHO_S,E_drift,nogrowt
     a_df            = zeros([n_t,n_r])
     a_fr            = zeros([n_t,n_r])
     a_dr            = zeros([n_t,n_r])
+    Tout            = zeros([n_t,n_r])
+    alphaout        = zeros([n_t,n_r])
     u_in            = solution_d[0,:]*x
     it_old          = 1
     snap_count      = 0
@@ -154,19 +156,30 @@ def run(x,a_0,time,sig_g,sig_d,v_gas,T,alpha,m_star,V_FRAG,RHO_S,E_drift,nogrowt
     else:
         def Tfunc(x,locals_):
             return T
+            
+    # alpha can be either an array or a specific function.
+    # in either case, we define a function that returns it
+    
+    if hasattr(alpha, '__call__'):
+        alpha_func = alpha
+    else:
+        def alpha_func(x,locals_):
+            return alpha
 
     #
     # save the velocity which will be used
     #
-    res  = get_velocity(t,solution_d[0,:],x,sig_g,v_gas,Tfunc(x,locals()),alpha,m_star,a_0,V_FRAG,RHO_S,E_drift,nogrowth=nogrowth)
-    v_bar[0,:] = res[0]
-    Diff[0,:]  = res[1]
-    v_0[0,:]   = res[2]
-    v_1[0,:]   = res[3]
-    a_t[0,:]   = res[4]
-    a_df[0,:]  = res[5]
-    a_fr[0,:]  = res[6]
-    a_dr[0,:]  = res[7]
+    res  = get_velocity(t,solution_d[0,:],x,sig_g,v_gas,Tfunc(x,locals()),alpha_func(x,locals()),m_star,a_0,V_FRAG,RHO_S,E_drift,nogrowth=nogrowth)
+    v_bar[0,:]    = res[0]
+    Diff[0,:]     = res[1]
+    v_0[0,:]      = res[2]
+    v_1[0,:]      = res[3]
+    a_t[0,:]      = res[4]
+    a_df[0,:]     = res[5]
+    a_fr[0,:]     = res[6]
+    a_dr[0,:]     = res[7]
+    Tout[0,:]     = Tfunc(x,locals())
+    alphaout[0,:] = alpha_func(x,locals())
     #
     # the loop
     #
@@ -184,14 +197,15 @@ def run(x,a_0,time,sig_g,sig_d,v_gas,T,alpha,m_star,V_FRAG,RHO_S,E_drift,nogrowt
             print('dt = 0')
             sys.exit(1)
             
-        # update the temperature            
+        # update the temperature and alpha
             
-        _T = Tfunc(x,locals())
+        _T     = Tfunc(x,locals())
+        _alpha = alpha_func(x,locals())
             
         
         # calculate the velocity
         
-        res    = get_velocity(t,u_in/x,x,sig_g,v_gas,_T,alpha,m_star,a_0,V_FRAG,RHO_S,E_drift,nogrowth=nogrowth)
+        res    = get_velocity(t,u_in/x,x,sig_g,v_gas,_T,_alpha,m_star,a_0,V_FRAG,RHO_S,E_drift,nogrowth=nogrowth)
         v      = res[0]
         D      = res[1]
         v[0]   = v[1]
@@ -212,7 +226,7 @@ def run(x,a_0,time,sig_g,sig_d,v_gas,T,alpha,m_star,V_FRAG,RHO_S,E_drift,nogrowt
         #
         while any(u_dust[2:-1][mask]/x[2:-1][mask]>=1e-30):
             dt = dt/10.
-            if dt<1.0:
+            if dt<1.0 and snap_count>0:
                 print('ERROR: time step got too short')
                 sys.exit(1)
             u_dust = impl_donorcell_adv_diff_delta(n_r,x,D,v,g,h,K,L,flim,u_in,dt,1,1,0,0,0,0,1,A0,B0,C0,D0)
@@ -226,7 +240,7 @@ def run(x,a_0,time,sig_g,sig_d,v_gas,T,alpha,m_star,V_FRAG,RHO_S,E_drift,nogrowt
         # update the gas
         #
         if gasevol:
-            nu_gas     = alpha * k_b*T/mu/m_p * sqrt(x**3/Grav/m_star)
+            nu_gas     = _alpha * k_b*T/mu/m_p * sqrt(x**3/Grav/m_star)
             u_gas_old  = sig_g*x
             u_gas      = u_gas_old[:]
             v_gas      = zeros(n_r)
@@ -274,16 +288,18 @@ def run(x,a_0,time,sig_g,sig_d,v_gas,T,alpha,m_star,V_FRAG,RHO_S,E_drift,nogrowt
             #
             # store the rest
             #
-            v_0[snap_count,:]   = res[2]
-            v_1[snap_count,:]   = res[3]
-            a_t[snap_count,:]   = res[4]
-            a_df[snap_count,:]  = res[5]
-            a_fr[snap_count,:]  = res[6]
-            a_dr[snap_count,:]  = res[7]
+            v_0[snap_count,:]      = res[2]
+            v_1[snap_count,:]      = res[3]
+            a_t[snap_count,:]      = res[4]
+            a_df[snap_count,:]     = res[5]
+            a_fr[snap_count,:]     = res[6]
+            a_dr[snap_count,:]     = res[7]
+            Tout[snap_count,:]     = _T
+            alphaout[snap_count,:] = _alpha
 
     progress_bar(100.,'toy model running')
 
-    return time,solution_d,solution_g,v_bar,vgas,v_0,v_1,a_dr,a_fr,a_df,a_t
+    return time,solution_d,solution_g,v_bar,vgas,v_0,v_1,a_dr,a_fr,a_df,a_t,Tout,alphaout
 
 
 def get_velocity(t,sigma_d_t,x,sigma_g,v_gas,T,alpha,m_star,a_0,V_FRAG,RHO_S,E_drift,nogrowth=False):

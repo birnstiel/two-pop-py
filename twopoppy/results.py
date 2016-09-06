@@ -6,6 +6,7 @@ class results:
     x            = None
     timesteps    = None
     T            = None
+    alpha        = None
     sigma_g      = None
     sigma_d      = None
     v_gas        = None
@@ -38,6 +39,7 @@ class results:
         np.savetxt(dirname+os.sep+'sigma_d.dat', self.sigma_d)
         np.savetxt(dirname+os.sep+'x.dat',       self.x)
         np.savetxt(dirname+os.sep+'T.dat',       self.T)
+        np.savetxt(dirname+os.sep+'alpha.dat',   self.alpha)
         np.savetxt(dirname+os.sep+'time.dat',    self.timesteps)
         np.savetxt(dirname+os.sep+'v_gas.dat',   self.v_gas)
         np.savetxt(dirname+os.sep+'v_dust.dat',  self.v_dust)
@@ -73,6 +75,7 @@ class results:
         self.sigma_d   = np.loadtxt(dirname+os.sep+'sigma_d.dat')
         self.x         = np.loadtxt(dirname+os.sep+'x.dat')
         self.T         = np.loadtxt(dirname+os.sep+'T.dat')
+        self.alpha     = np.loadtxt(dirname+os.sep+'alpha.dat')
         self.timesteps = np.loadtxt(dirname+os.sep+'time.dat')
         self.v_gas     = np.loadtxt(dirname+os.sep+'v_gas.dat')
         self.v_0       = np.loadtxt(dirname+os.sep+'v_0.dat')
