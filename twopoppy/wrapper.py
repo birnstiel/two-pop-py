@@ -30,8 +30,7 @@ results are reproducible, as the code can change.
 
 ------------------------------------------------------------------------------- 
 """
-import gzip, bz2, os
-from uTILities import task_status
+import gzip, bz2, os, sys
 import cPickle
 from .args import args
 from .results import results
@@ -40,6 +39,52 @@ compressors  = {
     'no match':[open,'raw'],'raw':[open,'raw'],
     'gzip':[gzip.GzipFile,'pgz'],'gz':[gzip.GzipFile,'pgz'],
     'bz2':[bz2.BZ2File,'pbz2']}
+    
+class task_status(object):
+    """
+    Context manager to show that a task is in progrees, or finished.
+    
+    Arguments:
+    ----------
+    
+    start : string
+        string description of the process
+    
+    Keywords:
+    ---------
+    
+    end : string
+        string for announcing completion of process, such as 'Done!'
+        
+    dots : string
+        what to print in between, defaults to '...'
+        
+    blink : bool
+        default: True; causes the dots to blink using ANSI control characters
+    
+    Example:
+    --------
+    
+    >>> import time
+    >>> with task_status('Loading') as t: time.sleep(5)
+    Loading ... Done!
+    
+    """
+    import sys
+    def __init__(self, start, end='Done!', dots="...",blink=True):
+        self.start = start
+        self.end   = end
+        self.dots  = dots
+        self.blink = blink
+    def __enter__(self):
+        if self.blink:
+            sys.stdout.write(self.start+' '+"\033[0;5m{}\033[0m".format(self.dots))
+        else:
+            sys.stdout.write(self.start+' '+self.dots)
+        sys.stdout.flush()
+    def __exit__(self, type, value, traceback):
+        print('\r'+self.start+' '+self.dots+' '+self.end)
+
 
 def get_compression_type(filename):
     """
@@ -247,7 +292,7 @@ def model_wrapper(ARGS,plot=False,save=False):
     # print setup
     #
     print(__doc__)
-    print('\n'+35*'-')
+    print('\n'+48*'-')
     print(  'Model parameters:')
     ARGS.print_args()
     #
@@ -315,7 +360,7 @@ def model_wrapper(ARGS,plot=False,save=False):
     # ================================
     #
     a  = np.logspace(np.log10(a0),np.log10(5*a_t.max()),n_a)
-    print('\n'+35*'-')
+    print('\n'+48*'-')
     if model.distri_available:
         try:
             print('reconstructing size distribution')
@@ -372,7 +417,7 @@ def model_wrapper(ARGS,plot=False,save=False):
     # ========
     #
     if plot:
-        print(35*'-')
+        print(48*'-')
         print('plotting results ...') 
         try:
             from widget import plotter
@@ -401,9 +446,9 @@ def model_wrapper(ARGS,plot=False,save=False):
             cb.set_label('$a\cdot\Sigma_\mathrm{d}(r,a)$ [g cm$^{-2}$]')
         plt.show()
     
-    print(35*'-'+'\n')
-    print('ALL DONE'.center(35))
-    print('\n'+35*'-')
+    print(48*'-'+'\n')
+    print('ALL DONE'.center(48))
+    print('\n'+48*'-')
     return res
     
 def model_wrapper_test():
