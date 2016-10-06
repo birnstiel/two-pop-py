@@ -39,7 +39,7 @@ class results:
         np.savetxt(dirname+os.sep+'sigma_d.dat', self.sigma_d)
         np.savetxt(dirname+os.sep+'x.dat',       self.x)
         np.savetxt(dirname+os.sep+'T.dat',       self.T)
-        np.savetxt(dirname+os.sep+'alpha.dat',   self.alpha)
+        np.savetxt(dirname+os.sep+'alpha.dat',   np.array(self.alpha,ndmin=1))
         np.savetxt(dirname+os.sep+'time.dat',    self.timesteps)
         np.savetxt(dirname+os.sep+'v_gas.dat',   self.v_gas)
         np.savetxt(dirname+os.sep+'v_dust.dat',  self.v_dust)
