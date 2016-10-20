@@ -281,7 +281,7 @@ def run(x,a_0,time,sig_g,sig_d,v_gas,T,alpha,m_star,V_FRAG,RHO_S,E_drift,nogrowt
             # save the data
             #
             solution_d[snap_count,:] = u_dust/x
-            solution_g[snap_count,:] = u_gas/x
+            solution_g[snap_count,:] = sig_g
             v_bar[snap_count,:]      = v
             vgas[snap_count,:]       = v_gas
             Diff[snap_count,:]       = D
