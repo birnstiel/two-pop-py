@@ -2,7 +2,7 @@ from setuptools import setup
 import os
 
 PACKAGENAME='twopoppy'
-VERSION='0.2.0'
+VERSION='0.2.1'
 
 # define custom build class
 
