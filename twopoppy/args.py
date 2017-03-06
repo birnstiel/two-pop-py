@@ -1,5 +1,5 @@
 class args:
-    import const as _c
+    from . import const as _c
     
     # names of all parameters
 

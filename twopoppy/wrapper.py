@@ -31,7 +31,7 @@ results are reproducible, as the code can change.
 ------------------------------------------------------------------------------- 
 """
 import gzip, bz2, os, sys
-import cPickle
+import pickle
 from .args import args
 from .results import results
 
@@ -118,7 +118,7 @@ def load_grid_results(fname):
     """
     compressor,suffix = compressors[get_compression_type(fname)]
     
-    with task_status('Loading {}-file \'{}\''.format(suffix,fname)), compressor(fname) as f: res=cPickle.load(f)
+    with task_status('Loading {}-file \'{}\''.format(suffix,fname)), compressor(fname) as f: res=pickle.load(f)
     return res
     
 def write_grid_results(res,fname,compression='gzip'):
@@ -144,7 +144,7 @@ def write_grid_results(res,fname,compression='gzip'):
         raise NameError('{} is not a defined compression method'.format(compression))
     compressor,suffix = compressors[compression]
     fname = os.path.splitext(fname)[0]+os.path.extsep+suffix
-    with task_status('Writing {}-file \'{}\''.format(suffix,fname)), compressor(fname,'w') as f: cPickle.dump(res,f)
+    with task_status('Writing {}-file \'{}\''.format(suffix,fname)), compressor(fname,'w') as f: pickle.dump(res,f)
 
 def lbp_solution(R,gamma,nu1,mstar,mdisk,RC0,time=0):
     """
@@ -367,7 +367,7 @@ def model_wrapper(ARGS,plot=False,save=False):
             reconstruct_size_distribution = model.reconstruct_size_distribution
             it = -1
             sig_sol,_,_,_,_,_ = reconstruct_size_distribution(x,a,TI[it],SOLG[it],SOLD[-1],alpha*np.ones(nr),rhos,T,mstar,vfrag,a_0=a0)
-        except Exception, _:
+        except Exception:
             import traceback,warnings
             w = 'Could not reconstruct size distribution\nTraceback:\n----------\n' 
             w+= traceback.format_exc()  

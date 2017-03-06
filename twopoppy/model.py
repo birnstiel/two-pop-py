@@ -710,12 +710,12 @@ try:
     from distribution_reconstruction import reconstruct_size_distribution
     distri_available=True
 except (ImportError, SyntaxError):
-    import os        as _os
-    import inspect   as _inspect
-    import urllib    as _urllib
-    import ssl       as _ssl
-    import warnings  as _warnings
-    import traceback as _traceback
+    import os             as _os
+    import inspect        as _inspect
+    import ssl            as _ssl
+    import warnings       as _warnings
+    import traceback      as _traceback
+    import urllib.request as _request
     
     print('could not import distribution_reconstruction.py, will download it and retry')
     
@@ -725,8 +725,8 @@ except (ImportError, SyntaxError):
             ctx = _ssl.create_default_context()
             ctx.check_hostname = False
             ctx.verify_mode = _ssl.CERT_NONE
-            open(_module_path+_os.sep+_file, 'wb').write(_urllib.urlopen(_gitpath+_file,context=ctx).read())
-        except Exception, err:
+            open(_module_path+_os.sep+_file, 'wb').write(_request.urlopen(_gitpath+_file,context=ctx).read())
+        except:
             _warnings.warn('Could not download {}'.format(_file))
             for s in _traceback.format_exc().split('\n'):  print(4*' '+s)
             
