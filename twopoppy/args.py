@@ -63,7 +63,7 @@ class args:
         using other units.
         """
         import warnings
-        for k,v in kwargs.iteritems():
+        for k,v in kwargs.items():
             if hasattr(self,k):
                 setattr(self,k,v)
             else:
@@ -99,7 +99,7 @@ class args:
             'edrift':  [1,            '']
             }
         
-        for n,conv_unit in conversion.iteritems():
+        for n,conv_unit in conversion.items():
             conv,unit = conv_unit
             value     = getattr(self, n)
             isarray   = hasattr(value, '__len__')
@@ -171,7 +171,7 @@ class args:
         
         varlist = {v[0]:v[1] for v in self.varlist}
         
-        for name,val in parser.iteritems():
+        for name,val in parser.items():
             if name not in varlist:
                 print('Unknown Parameter:{}'.format(name))
                 continue

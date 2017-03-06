@@ -108,7 +108,7 @@ def run(x,a_0,time,sig_g,sig_d,v_gas,T,alpha,m_star,V_FRAG,RHO_S,E_drift,nogrowt
             return 200*(x/AU)**-1
     """
     from numpy     import ones,zeros,Inf,maximum,minimum,sqrt,where
-    from const     import year,Grav,k_b,mu,m_p
+    from .const     import year,Grav,k_b,mu,m_p
     import sys
     #
     # some setup
@@ -383,7 +383,7 @@ def get_velocity(t,sigma_d_t,x,sigma_g,v_gas,T,alpha,m_star,a_0,V_FRAG,RHO_S,E_d
     #
     # set some constants
     #
-    from const import k_b,mu,m_p,Grav
+    from .const import k_b,mu,m_p,Grav
     from numpy import ones,zeros,maximum,minimum,sqrt,array,exp,invert,pi
     n_r = len(x)
     #

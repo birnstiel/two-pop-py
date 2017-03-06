@@ -258,9 +258,9 @@ def model_wrapper(ARGS,plot=False,save=False):
     results : instance of the results object
     """
     import numpy as np
-    import model
+    from . import model
     from matplotlib    import pyplot as plt
-    from const         import AU, year, Grav, k_b, mu, m_p
+    from .const         import AU, year, Grav, k_b, mu, m_p
     from numbers       import Number
     #
     # set parameters according to input
@@ -455,7 +455,7 @@ def model_wrapper_test():
     """
     Test gas evolution: use small rc and large alpha
     """
-    from const import AU
+    from .const import AU
     Args       = args()
     Args.rc    = 20*AU
     Args.alpha = 1e-2
@@ -466,7 +466,7 @@ def model_wrapper_test_plot(res):
     """
     Plot the test result and returns the figure.
     """
-    from const import Grav, m_p, mu, k_b, year, AU
+    from .const import Grav, m_p, mu, k_b, year, AU
     import numpy as np
     import matplotlib.pyplot as plt
     from matplotlib.pyplot import style
@@ -513,7 +513,7 @@ def model_wrapper_test_plot(res):
     
 def main():
     import argparse
-    import const as c
+    from . import const as c
     #
     # =================
     # ARGUMENT HANDLING
