@@ -240,7 +240,7 @@ def run(x,a_0,time,sig_g,sig_d,v_gas,T,alpha,m_star,V_FRAG,RHO_S,E_drift,nogrowt
         # update the gas
         #
         if gasevol:
-            nu_gas     = _alpha * k_b*T/mu/m_p * sqrt(x**3/Grav/m_star)
+            nu_gas     = _alpha * k_b*_T/mu/m_p * sqrt(x**3/Grav/m_star)
             u_gas_old  = sig_g*x
             u_gas      = u_gas_old[:]
             v_gas      = zeros(n_r)
