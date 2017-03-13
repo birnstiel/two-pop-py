@@ -50,7 +50,7 @@ class results:
         np.savetxt(dirname+os.sep+'a_df.dat',    self.a_df)
         np.savetxt(dirname+os.sep+'a_t.dat',     self.a_t)
         
-        if model.distri_available:
+        if model.distri_available and self.a is not None and self.sig_sol is not None:
             np.savetxt(dirname+os.sep+'a.dat',         self.a)
             np.savetxt(dirname+os.sep+'sigma_d_a.dat', self.sig_sol)
         
@@ -64,11 +64,14 @@ class results:
         import numpy as np
         
         if dirname is None:
-            dirname = self.abs.dir
+            if self.args.dir is not None:
+                dirname = self.abs.dir
+            else:
+                dirname = 'data'
             
         
         print('\n'+35*'-')
-        print('writing results to {} ...'.format(dirname))
+        print('reading results from {} ...'.format(dirname))
         if not os.path.isdir(dirname):
             os.mkdir(dirname)
         self.sigma_g   = np.loadtxt(dirname+os.sep+'sigma_g.dat')
@@ -86,9 +89,10 @@ class results:
         self.a_t       = np.loadtxt(dirname+os.sep+'a_t.dat')
         
         if os.path.isfile(dirname+os.sep+'a.dat'):
-            self.a       = np.savetxt(dirname+os.sep+'a.dat')
+            self.a       = np.loadtxt(dirname+os.sep+'a.dat')
         if os.path.isfile(dirname+os.sep+'sigma_d_a.dat'):
-            self.sig_sol = np.savetxt(dirname+os.sep+'sigma_d_a.dat')
+            self.sig_sol = np.loadtxt(dirname+os.sep+'sigma_d_a.dat')
         
         self.args = args()
-        self.args.read(dirname=dirname)
+        self.args.dir = dirname
+        self.args.read_args()

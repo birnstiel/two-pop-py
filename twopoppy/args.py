@@ -190,8 +190,15 @@ class args:
                     val = [t(v) for v in val.split()]
                     setattr(self, name, numpy.array(val))
                 else:
-                    # plain values
-                    setattr(self, name, t(val))
+                    try:
+                        # plain values
+                        setattr(self, name, t(val))
+                    except:
+                        try:
+                            setattr(self,name,val)
+                        except:
+                            print('Could not convert variable \'{}\' with stored value {}'.format(name,t(val)))
+                            
             else:
                 # stings and nones
                 if val=='None':
