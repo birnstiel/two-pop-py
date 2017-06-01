@@ -105,12 +105,18 @@ def get_compression_type(filename):
 
     max_len = max(len(x) for x in magic_dict)
     
-    with open(filename) as f: file_start = f.read(max_len)
-        
-    for magic, filetype in magic_dict.items():
-        if file_start.startswith(magic):
-            return filetype
-    return "no match"
+    try:
+        with open(filename,'rb') as f: file_start = f.read(max_len)
+            
+        for magic, filetype in magic_dict.items():
+            if file_start.startswith(magic):
+                return filetype
+        return "no match"
+    except:
+        # use the file ending
+        d = dict(zip([l[1] for l in compressors.values()],compressors.keys()))
+        ext = os.path.splitext(filename)[1][1:]
+        return d[ext]
 
 def load_grid_results(fname):
     """
