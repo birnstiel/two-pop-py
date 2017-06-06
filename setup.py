@@ -2,7 +2,7 @@ from setuptools import setup
 import os
 
 PACKAGENAME='twopoppy'
-VERSION='0.2.1'
+VERSION='0.2.2'
 
 # define custom build class
 
@@ -14,7 +14,7 @@ with open(os.path.join(PACKAGENAME, '_version.py'), 'w') as f:
 setup(name=PACKAGENAME,
     version=VERSION,
     description='two-population dust evolution model according to Birnstiel, Klahr, Ercolano, A&A (2012)',
-    long_descrioption=open(os.path.join(os.path.dirname(__file__),'README.md')).read(),
+    long_description=open(os.path.join(os.path.dirname(__file__),'README.md')).read(),
     url='http://www.til-birnstiel.de',
     author='Til Birnstiel',
     author_email='birnstiel@me.com',
@@ -28,11 +28,8 @@ setup(name=PACKAGENAME,
         'numpy',
         'matplotlib'
         ],
-    entry_points={
-        'console_scripts': [
-            'twopoppy=twopoppy:main',
-        ]
-    },
+
+    scripts=['scripts/twopoppyrun'],
     zip_safe=False
     )
     
