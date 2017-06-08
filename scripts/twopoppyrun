@@ -41,6 +41,7 @@ def main():
     PARSER.add_argument('-a0',    help='initial grain size [cm]',              type=float, default=1e-5)
     PARSER.add_argument('-gamma', help='viscosity: alpha*(r/r[0])**gamma',     type=float, default=1)
     PARSER.add_argument('-edrift',help='drift fudge factor',                   type=float, default=1.0)
+    PARSER.add_argument('-estick',help='sticking probability',                 type=float, default=1.0)
     PARSER.add_argument('-xeuv',  help='XEUV mass loss rate [Msun/year]',      type=float, default=0.0)
     PARSER.add_argument('-dir',   help='output directory default: data/',      type=str,   default='data')
 

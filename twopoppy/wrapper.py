@@ -290,6 +290,7 @@ def model_wrapper(ARGS,plot=False,save=False):
     a0       = ARGS.a0
     gamma    = ARGS.gamma
     edrift   = ARGS.edrift
+    estick   = ARGS.estick
     gasevol  = ARGS.gasevol
     tempevol = ARGS.tempevol
     starevol = ARGS.starevol
@@ -359,7 +360,7 @@ def model_wrapper(ARGS,plot=False,save=False):
     
     # call the model
     
-    TI,SOLD,SOLG,VD,VG,v_0,v_1,a_dr,a_fr,a_df,a_t,Tout,alphaout = model.run(x,a0,timesteps,sigma_g,sigma_d,v_gas,T,alpha_fct,mstar,vfrag,rhos,edrift,nogrowth=False,gasevol=gasevol)
+    TI,SOLD,SOLG,VD,VG,v_0,v_1,a_dr,a_fr,a_df,a_t,Tout,alphaout = model.run(x,a0,timesteps,sigma_g,sigma_d,v_gas,T,alpha_fct,mstar,vfrag,rhos,edrift,E_stick=estick,nogrowth=False,gasevol=gasevol)
     #
     # ================================
     # RECONSTRUCTING SIZE DISTRIBUTION

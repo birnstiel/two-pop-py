@@ -21,6 +21,7 @@ class args:
                 ['a0',      float],
                 ['gamma',   float],
                 ['edrift',  float],
+                ['estick',  float],
                 ['T',       float],
                 ['gasevol',  bool],
                 ['tempevol', bool],
@@ -48,6 +49,7 @@ class args:
     a0      = 1e-5
     gamma   = 1.0
     edrift  = 1.0
+    estick  = 1.0
 
     gasevol  = True
     tempevol = False
@@ -96,7 +98,8 @@ class args:
             'vfrag':   [1,            'cm/s'],
             'a0':      [1,            'cm'],
             'gamma':   [1,            ''],
-            'edrift':  [1,            '']
+            'edrift':  [1,            ''],
+            'estick':  [1,            '']
             }
         
         for n,conv_unit in conversion.items():
