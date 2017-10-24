@@ -386,7 +386,8 @@ def reconstruct_size_distribution(r, a, t, sig_g, sig_d, alpha, rho_s, T, M_star
         mask &= np.invert(np.isnan(pd_est))
         if len(pd_est[mask]) != 0:
             inte = cumtrapz(pd_est[mask], x=np.log10(r[mask]), initial=0)
-            inte /= np.abs(inte).max()
+            if inte[-1]!=0:
+                inte /= np.abs(inte).max()
             sol = np.exp(inte)
             sol = sol / np.interp(ra, r[mask], sol) * _sigd
             sig_3[ia, mask] = np.maximum(sol, sig_3[ia, mask])
@@ -415,7 +416,7 @@ def reconstruct_size_distribution(r, a, t, sig_g, sig_d, alpha, rho_s, T, M_star
             else:
                 mask_idx = mask_idx[0]
             mask &= (np.arange(n_r) <= np.arange(n_r)[mask][mask_idx])
-            sig_3[ia, mask] = sol2[:mask_idx + 1]
+            sig_3[ia, mask] = np.minimum(_sigd,sol2[:mask_idx + 1])
 
     sig_3[np.isnan(sig_3)] = floor
     #
@@ -455,10 +456,12 @@ def reconstruct_size_distribution(r, a, t, sig_g, sig_d, alpha, rho_s, T, M_star
             imax = np.where(sig_3[:, ir] > floor)[0][-1]
             if imax == i_full:
                 # if it is still the same, we will just take a steep power-law
-                pwl = -3
+                pwl = 3
             else:
                 pwl = np.log(sig_3[imax, ir] / sig_3[i_full, ir]
                              ) / np.log(a[imax] / a[i_full])
+                pwl = max(3,pwl)
+                
         sig_3[:i_full, ir] = sig_3[i_full, ir] * (a[:i_full] / a[i_full])**pwl
     #
     # Now the problem is how to stitch the 3 distributions together,
