@@ -8,7 +8,7 @@ This python script runs a two-population dust evolution model according to [Birn
 
 This code is published on [github.com/birnstiel](https://github.com/birnstiel/two-pop-py).
 
-For bug reports, questions, ... contact me via [my website](http://www.til-birnstiel.de/contact/).
+For bug reports, questions, ... contact me via [my website](http://www.til-birnstiel.de).
 
 ### Credits
 
