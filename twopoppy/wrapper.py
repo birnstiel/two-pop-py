@@ -30,16 +30,20 @@ results are reproducible, as the code can change.
 
 -------------------------------------------------------------------------------
 """
-import gzip, bz2, os, sys
+import gzip
+import bz2
+import os
+import sys
 import pickle
 from .args import args
 from .results import results
 from .distribution_reconstruction import reconstruct_size_distribution
 
-compressors  = {
-    'no match':[open,'raw'],'raw':[open,'raw'],
-    'gzip':[gzip.GzipFile,'pgz'],'gz':[gzip.GzipFile,'pgz'],
-    'bz2':[bz2.BZ2File,'pbz2']}
+compressors = {
+    'no match': [open, 'raw'], 'raw': [open, 'raw'],
+    'gzip': [gzip.GzipFile, 'pgz'], 'gz': [gzip.GzipFile, 'pgz'],
+    'bz2': [bz2.BZ2File, 'pbz2']}
+
 
 class task_status(object):
     """
@@ -72,19 +76,22 @@ class task_status(object):
 
     """
     import sys
-    def __init__(self, start, end='Done!', dots="...",blink=True):
+
+    def __init__(self, start, end='Done!', dots="...", blink=True):
         self.start = start
-        self.end   = end
-        self.dots  = dots
+        self.end = end
+        self.dots = dots
         self.blink = blink
+
     def __enter__(self):
         if self.blink:
-            sys.stdout.write(self.start+' '+"\033[0;5m{}\033[0m".format(self.dots))
+            sys.stdout.write(self.start + ' ' + "\033[0;5m{}\033[0m".format(self.dots))
         else:
-            sys.stdout.write(self.start+' '+self.dots)
+            sys.stdout.write(self.start + ' ' + self.dots)
         sys.stdout.flush()
+
     def __exit__(self, type, value, traceback):
-        print('\r'+self.start+' '+self.dots+' '+self.end)
+        print('\r' + self.start + ' ' + self.dots + ' ' + self.end)
 
 
 def get_compression_type(filename):
@@ -107,7 +114,8 @@ def get_compression_type(filename):
     max_len = max(len(x) for x in magic_dict)
 
     try:
-        with open(filename,'rb') as f: file_start = f.read(max_len)
+        with open(filename, 'rb') as f:
+            file_start = f.read(max_len)
 
         for magic, filetype in magic_dict.items():
             if file_start.startswith(magic):
@@ -115,20 +123,23 @@ def get_compression_type(filename):
         return "no match"
     except:
         # use the file ending
-        d = dict(zip([l[1] for l in compressors.values()],compressors.keys()))
+        d = dict(zip([l[1] for l in compressors.values()], compressors.keys()))
         ext = os.path.splitext(filename)[1][1:]
         return d[ext]
+
 
 def load_grid_results(fname):
     """
     Load list of grid results from file
     """
-    compressor,suffix = compressors[get_compression_type(fname)]
+    compressor, suffix = compressors[get_compression_type(fname)]
 
-    with task_status('Loading {}-file \'{}\''.format(suffix,fname)), compressor(fname) as f: res=pickle.load(f)
+    with task_status('Loading {}-file \'{}\''.format(suffix, fname)), compressor(fname) as f:
+        res = pickle.load(f)
     return res
 
-def write_grid_results(res,fname,compression='gzip'):
+
+def write_grid_results(res, fname, compression='gzip'):
     """
     Write list of grid results to file.
 
@@ -149,11 +160,13 @@ def write_grid_results(res,fname,compression='gzip'):
     """
     if compression not in compressors.keys():
         raise NameError('{} is not a defined compression method'.format(compression))
-    compressor,suffix = compressors[compression]
-    fname = os.path.splitext(fname)[0]+os.path.extsep+suffix
-    with task_status('Writing {}-file \'{}\''.format(suffix,fname)), compressor(fname,'w') as f: pickle.dump(res,f)
+    compressor, suffix = compressors[compression]
+    fname = os.path.splitext(fname)[0] + os.path.extsep + suffix
+    with task_status('Writing {}-file \'{}\''.format(suffix, fname)), compressor(fname, 'w') as f:
+        pickle.dump(res, f)
 
-def lbp_solution(R,gamma,nu1,mstar,mdisk,RC0,time=0):
+
+def lbp_solution(R, gamma, nu1, mstar, mdisk, RC0, time=0):
     """
     Calculate Lynden-Bell & Pringle self similar solution.
     All values need to be either given with astropy-units, or
@@ -202,47 +215,49 @@ def lbp_solution(R,gamma,nu1,mstar,mdisk,RC0,time=0):
     # assume cgs if no units are given
 
     units = True
-    if not hasattr(R,'unit'):
-        R     = R*u.cm
-        units  = False
-    if not hasattr(mdisk,'unit'):
-        mdisk = mdisk*u.g
-    if not hasattr(mstar,'unit'):
-        mstar = mstar*u.g
-    if not hasattr(nu1,'unit'):
-        nu1   = nu1*u.cm**2/u.s
-    if not hasattr(RC0,'unit'):
-        RC0   = RC0*u.cm
-    if time is None: time = 0
-    if not hasattr(time,'unit'):
-        time  = time*u.s
+    if not hasattr(R, 'unit'):
+        R = R * u.cm
+        units = False
+    if not hasattr(mdisk, 'unit'):
+        mdisk = mdisk * u.g
+    if not hasattr(mstar, 'unit'):
+        mstar = mstar * u.g
+    if not hasattr(nu1, 'unit'):
+        nu1 = nu1 * u.cm**2 / u.s
+    if not hasattr(RC0, 'unit'):
+        RC0 = RC0 * u.cm
+    if time is None:
+        time = 0
+    if not hasattr(time, 'unit'):
+        time = time * u.s
 
     # convert to variables as in Hartmann paper
 
-    R1   = R[0]
-    r    = R/R1
-    ts   = 1./(3*(2-gamma)**2)*R1**2/nu1
+    R1 = R[0]
+    r = R / R1
+    ts = 1. / (3 * (2 - gamma)**2) * R1**2 / nu1
 
-    T0   = (RC0/R1)**(2.-gamma)
-    toff = (T0-1)*ts
+    T0 = (RC0 / R1)**(2. - gamma)
+    toff = (T0 - 1) * ts
 
-    T1   = (time+toff)/ts+1
-    RC1  = T1**(1./(2.-gamma))*R1
+    T1 = (time + toff) / ts + 1
+    RC1 = T1**(1. / (2. - gamma)) * R1
 
     # the normalization constant
 
-    C  = (-3*mdisk*nu1*T0**(1./(4. - 2.*gamma))*(-2 + gamma))/2./R1**2
+    C = (-3 * mdisk * nu1 * T0**(1. / (4. - 2. * gamma)) * (-2 + gamma)) / 2. / R1**2
 
     # calculate the surface density
 
-    sig_g = C/(3*np.pi*nu1*r)*T1**(-(5./2.-gamma)/(2.-gamma))*np.exp(-(r**(2.-gamma))/T1)
+    sig_g = C / (3 * np.pi * nu1 * r) * T1**(-(5. / 2. - gamma) / (2. - gamma)) * np.exp(-(r**(2. - gamma)) / T1)
 
     if units:
-        return sig_g,RC1
+        return sig_g, RC1
     else:
-        return sig_g.cgs.value,RC1.cgs.value
+        return sig_g.cgs.value, RC1.cgs.value
 
-def model_wrapper(ARGS,plot=False,save=False):
+
+def model_wrapper(ARGS, plot=False, save=False):
     """
     This is a wrapper for the two-population model `model.run`, in which
     the disk profile is a self-similar solution.
@@ -266,42 +281,42 @@ def model_wrapper(ARGS,plot=False,save=False):
     """
     import numpy as np
     from . import model
-    from matplotlib    import pyplot as plt
-    from .const         import AU, year, Grav, k_b, mu, m_p
-    from numbers       import Number
+    from matplotlib import pyplot as plt
+    from .const import AU, year, Grav, k_b, mu, m_p
+    from numbers import Number
     #
     # set parameters according to input
     #
-    nr       = ARGS.nr
-    nt       = ARGS.nt
-    tmax     = ARGS.tmax
-    n_a      = ARGS.na
-    alpha    = ARGS.alpha
-    d2g      = ARGS.d2g
-    mstar    = ARGS.mstar
-    tstar    = ARGS.tstar
-    rstar    = ARGS.rstar
-    rc       = ARGS.rc
-    rt       = ARGS.rt
-    r0       = ARGS.r0
-    r1       = ARGS.r1
-    mdisk    = ARGS.mdisk
-    rhos     = ARGS.rhos
-    vfrag    = ARGS.vfrag
-    a0       = ARGS.a0
-    gamma    = ARGS.gamma
-    edrift   = ARGS.edrift
-    estick   = ARGS.estick
-    gasevol  = ARGS.gasevol
-    tempevol = ARGS.tempevol
-    starevol = ARGS.starevol
-    T        = ARGS.T
+    nr       = ARGS.nr          # noqa
+    nt       = ARGS.nt          # noqa
+    tmax     = ARGS.tmax        # noqa
+    n_a      = ARGS.na          # noqa
+    alpha    = ARGS.alpha       # noqa
+    d2g      = ARGS.d2g         # noqa
+    mstar    = ARGS.mstar       # noqa
+    tstar    = ARGS.tstar       # noqa
+    rstar    = ARGS.rstar       # noqa
+    rc       = ARGS.rc          # noqa
+    rt       = ARGS.rt          # noqa
+    r0       = ARGS.r0          # noqa
+    r1       = ARGS.r1          # noqa
+    mdisk    = ARGS.mdisk       # noqa
+    rhos     = ARGS.rhos        # noqa
+    vfrag    = ARGS.vfrag       # noqa
+    a0       = ARGS.a0          # noqa
+    gamma    = ARGS.gamma       # noqa
+    edrift   = ARGS.edrift      # noqa
+    estick   = ARGS.estick      # noqa
+    gasevol  = ARGS.gasevol     # noqa
+    tempevol = ARGS.tempevol    # noqa
+    starevol = ARGS.starevol    # noqa
+    T        = ARGS.T           # noqa
     #
     # print setup
     #
     print(__doc__)
-    print('\n'+48*'-')
-    print(  'Model parameters:')
+    print('\n' + 48 * '-')
+    print('Model parameters:')
     ARGS.print_args()
     #
     # ===========
@@ -310,161 +325,175 @@ def model_wrapper(ARGS,plot=False,save=False):
     #
     # create grids and temperature
     #
-    nri           = nr+1
-    xi            = np.logspace(np.log10(r0),np.log10(r1),nri)
-    x             = 0.5*(xi[1:]+xi[:-1])
-    timesteps     = np.logspace(4,np.log10(tmax/year),nt)*year
+    nri = nr + 1
+    xi = np.logspace(np.log10(r0), np.log10(r1), nri)
+    x = 0.5 * (xi[1:] + xi[:-1])
+    timesteps = np.logspace(4, np.log10(tmax / year), nt) * year
     if starevol:
         raise ValueError('stellar evolution not implemented')
 
     # if T is not set, define default temperature function.
 
     if T is None:
-        def T(x,locals_):
-            return ( (0.05**0.25*tstar * (x /rstar)**-0.5)**4 + (7.)**4)**0.25
+        def T(x, locals_):
+            return ((0.05**0.25 * tstar * (x / rstar)**-0.5)**4 + (7.)**4)**0.25
 
     # if temperature should not evolve, then replace the function with its initial value
 
-    if not tempevol and hasattr(T,'__call__'):
-        T = T(x,locals())
+    if not tempevol and hasattr(T, '__call__'):
+        T = T(x, locals())
 
     # set the initial surface density & velocity according Lynden-Bell & Pringle solution
 
     if isinstance(alpha, (list, tuple, np.ndarray)):
-        alpha_fct = lambda x,locals_: alpha
+        def alpha_fct(x, locals_):
+            return alpha
         print('alpha given as array, ignoring gamma index when setting alpha')
-    elif hasattr(alpha,'__call__'):
+    elif hasattr(alpha, '__call__'):
         alpha_fct = alpha
-    elif isinstance(alpha,Number):
-        alpha_fct = lambda x,locals_: alpha*(x/x[0])**(gamma-1)
+    elif isinstance(alpha, Number):
+        def alpha_fct(x, locals_):
+            return alpha * (x / x[0])**(gamma - 1)
 
     try:
         # this one could break if alpha_function works only in model.run
-        om1       = np.sqrt(Grav*args.mstar/x[0]**3)
-        cs1       = np.sqrt(k_b*T[0]/mu/m_p)
-        nu1       = alpha_fct(x,locals())*cs1**2/om1
-        sigma_g,_ = lbp_solution(x, gamma, nu1, mstar, mdisk, rc)
-        v_gas     = -3.0*alpha_fct(x,locals())*k_b*T/mu/m_p/2./np.sqrt(Grav*mstar/x)*(1.+7./4.)
+        om1 = np.sqrt(Grav * args.mstar / x[0]**3)
+        cs1 = np.sqrt(k_b * T[0] / mu / m_p)
+        nu1 = alpha_fct(x, locals()) * cs1**2 / om1
+        sigma_g, _ = lbp_solution(x, gamma, nu1, mstar, mdisk, rc)
+        v_gas = -3.0 * alpha_fct(x, locals()) * k_b * T / mu / m_p / 2. / np.sqrt(Grav * mstar / x) * (1. + 7. / 4.)
     except:
-        sigma_g   = mdisk*(2.-gamma)/(2.*np.pi*rc**2)*(x/rc)**-gamma*np.exp(-(x/rc)**(2.-gamma))
-        v_gas     = np.zeros(sigma_g.shape)
+        sigma_g = mdisk * (2. - gamma) / (2. * np.pi * rc**2) * (x / rc)**-gamma * np.exp(-(x / rc)**(2. - gamma))
+        v_gas = np.zeros(sigma_g.shape)
 
     # truncation
 
-    sigma_g[x>=rt] = 1e-100
+    sigma_g[x >= rt] = 1e-100
 
     # normalize disk mass
 
-    sigma_g = np.maximum(sigma_g,1e-100)
-    sigma_g = sigma_g/np.trapz(2*np.pi*x*sigma_g,x=x)*mdisk
-    sigma_d = sigma_g*d2g
+    sigma_g = np.maximum(sigma_g, 1e-100)
+    sigma_g = sigma_g / np.trapz(2 * np.pi * x * sigma_g, x=x) * mdisk
+    sigma_d = sigma_g * d2g
 
     # call the model
 
-    TI,SOLD,SOLG,VD,VG,v_0,v_1,a_dr,a_fr,a_df,a_t,Tout,alphaout = model.run(x,a0,timesteps,sigma_g,sigma_d,v_gas,T,alpha_fct,mstar,vfrag,rhos,edrift,E_stick=estick,nogrowth=False,gasevol=gasevol)
+    TI, SOLD, SOLG, VD, VG, v_0, v_1, a_dr, a_fr, a_df, a_t, Tout, alphaout = model.run(
+        x, a0, timesteps, sigma_g, sigma_d, v_gas, T, alpha_fct, mstar, vfrag, rhos, edrift, E_stick=estick, nogrowth=False, gasevol=gasevol)
+
     #
     # ================================
     # RECONSTRUCTING SIZE DISTRIBUTION
     # ================================
     #
-    a  = np.logspace(np.log10(a0),np.log10(5*a_t.max()),n_a)
-    print('\n'+48*'-')
+    a = np.logspace(np.log10(a0), np.log10(5 * a_t.max()), n_a)
+    print('\n' + 48 * '-')
 
     try:
         print('reconstructing size distribution')
         it = -1
-        sig_sol,_,_,_,_,_ = reconstruct_size_distribution(x,a,TI[it],SOLG[it],SOLD[-1],alpha*np.ones(nr),rhos,T,mstar,vfrag,a_0=a0)
+        sig_sol, _, _, _, _, _ = reconstruct_size_distribution(
+            x, a, TI[it], SOLG[it], SOLD[-1], alpha * np.ones(nr), rhos, T, mstar, vfrag, a_0=a0)
+
     except Exception:
-        import traceback,warnings
+        import traceback
+        import warnings
         w = 'Could not reconstruct size distribution\nTraceback:\n----------\n'
-        w+= traceback.format_exc()
-        w+= '\n----------'
+        w += '\n----------'
+        w += traceback.format_exc()
         warnings.warn(w)
-        a       = None
+        a = None
         sig_sol = None
     #
     # fill the results and write them out
     #
     res = results()
-    res.sigma_g   = SOLG
-    res.sigma_d   = SOLD
-    res.x         = x
+    res.sigma_g = SOLG
+    res.sigma_d = SOLD
+    res.x = x
 
-    if hasattr(T,'__call__'):
+    if hasattr(T, '__call__'):
         res.T = Tout
     else:
         res.T = T
 
-    if hasattr(alpha,'__call__'):
+    if hasattr(alpha, '__call__'):
         res.alpha = alphaout
     else:
         res.alpha = alpha
 
     res.timesteps = timesteps
-    res.v_gas     = VG
-    res.v_dust    = VD
-    res.v_0       = v_0
-    res.v_1       = v_1
-    res.a_dr      = a_dr
-    res.a_fr      = a_fr
-    res.a_df      = a_df
-    res.a_t       = a_t
-    res.args      = ARGS
-    res.a         = a
+    res.v_gas     = VG      # noqa
+    res.v_dust    = VD      # noqa
+    res.v_0       = v_0     # noqa
+    res.v_1       = v_1     # noqa
+    res.a_dr      = a_dr    # noqa
+    res.a_fr      = a_fr    # noqa
+    res.a_df      = a_df    # noqa
+    res.a_t       = a_t     # noqa
+    res.args      = ARGS    # noqa
+    res.a         = a       # noqa
 
     res.sig_sol = sig_sol
 
-    if save: res.write()
+    if save:
+        res.write()
     #
     # ========
     # PLOTTING
     # ========
     #
     if plot:
-        print(48*'-')
+        print(48 * '-')
         print('plotting results ...')
         try:
             from widget import plotter
             #
             # show the evolution of the sizes
             #
-            plotter(x=x/AU,data=a_fr,data2=a_dr,times=TI/year,xlog=1,ylog=1,xlim=[0.5,500],ylim=[2e-5,2e5],xlabel='r [AU]',i_start=0,ylabel='grain size [cm]')
+            plotter(x=x / AU, data=a_fr, data2=a_dr, times=TI / year, xlog=1, ylog=1,
+                    xlim=[0.5, 500], ylim=[2e-5, 2e5], xlabel='r [AU]', i_start=0, ylabel='grain size [cm]')
             #
             # evolution of the surface density
             #
-            plotter(x=x/AU,data=SOLD,data2=SOLG,times=TI/year,xlog=1,ylog=1,xlim=[0.5,500],ylim=[2e-5,2e5],xlabel='r [AU]',i_start=0,ylabel='$\Sigma_d$ [g cm $^{-2}$]')
+            plotter(x=x / AU, data=SOLD, data2=SOLG, times=TI / year, xlog=1, ylog=1,
+                    xlim=[0.5, 500], ylim=[2e-5, 2e5], xlabel='r [AU]', i_start=0, ylabel='$\Sigma_d$ [g cm $^{-2}$]')
+
         except ImportError:
             print('Could not import GUI, will not plot GUI')
 
-        _,ax = plt.subplots(tight_layout=True)
-        gsf  = 2*(a[1]/a[0]-1)/(a[1]/a[0]+1)
-        mx   = np.ceil(np.log10(sig_sol.max()/gsf))
-        cc=ax.contourf(x/AU,a,np.log10(np.maximum(sig_sol/gsf,1e-100)),np.linspace(mx-10,mx,50),cmap='OrRd')
+        _, ax = plt.subplots(tight_layout=True)
+        gsf = 2 * (a[1] / a[0] - 1) / (a[1] / a[0] + 1)
+        mx = np.ceil(np.log10(sig_sol.max() / gsf))
+        cc = ax.contourf(x / AU, a, np.log10(np.maximum(sig_sol / gsf, 1e-100)), np.linspace(mx - 10, mx, 50), cmap='OrRd')
+
         ax.set_xscale('log')
         ax.set_yscale('log')
         ax.set_xlabel('radius [AU]')
         ax.set_ylabel('particle size [cm]')
         cb = plt.colorbar(cc)
-        cb.set_ticks(np.arange(mx-10,mx+1))
+        cb.set_ticks(np.arange(mx - 10, mx + 1))
         cb.set_label('$a\cdot\Sigma_\mathrm{d}(r,a)$ [g cm$^{-2}$]')
 
         plt.show()
 
-    print(48*'-'+'\n')
+    print(48 * '-' + '\n')
     print('ALL DONE'.center(48))
-    print('\n'+48*'-')
+    print('\n' + 48 * '-')
     return res
+
 
 def model_wrapper_test():
     """
     Test gas evolution: use small rc and large alpha
     """
     from .const import AU
-    Args       = args()
-    Args.rc    = 20*AU
+    Args = args()
+    Args.rc = 20 * AU
     Args.alpha = 1e-2
-    res        = model_wrapper(Args)
+    res = model_wrapper(Args)
     return res
+
 
 def model_wrapper_test_plot(res):
     """
@@ -474,43 +503,43 @@ def model_wrapper_test_plot(res):
     import numpy as np
     import matplotlib.pyplot as plt
     from matplotlib.pyplot import style
-    style.use(['seaborn-dark',{'axes.grid': True,'font.size':10}]);
+    style.use(['seaborn-dark', {'axes.grid': True, 'font.size': 10}])
 
     # read the results
 
-    args  = res.args
-    x     = res.x
-    sig_0 = res.sigma_g[0]
-    sig_g = res.sigma_g[-1]
-    t     = res.timesteps[-1]
-    temp  = res.T
-    alpha = args.alpha
-    gamma = args.gamma
-    rc    = args.rc
-    mdisk = args.mdisk
-    mstar = args.mstar
+    args  = res.args            # noqa
+    x     = res.x               # noqa
+    sig_0 = res.sigma_g[0]      # noqa
+    sig_g = res.sigma_g[-1]     # noqa
+    t     = res.timesteps[-1]   # noqa
+    temp  = res.T               # noqa
+    alpha = args.alpha          # noqa
+    gamma = args.gamma          # noqa
+    rc    = args.rc             # noqa
+    mdisk = args.mdisk          # noqa
+    mstar = args.mstar          # noqa
 
     # calculate analytical solution
 
-    cs1 = np.sqrt(k_b*temp[0]/mu/m_p)
-    om1 = np.sqrt(Grav*mstar/x[0]**3)
-    nu1 = alpha*cs1**2/om1
-    siga_0,_ = lbp_solution(x,gamma,nu1,mstar,mdisk,rc)
-    siga_1,_ = lbp_solution(x,gamma,nu1,mstar,mdisk,rc,time=t)
+    cs1 = np.sqrt(k_b * temp[0] / mu / m_p)
+    om1 = np.sqrt(Grav * mstar / x[0]**3)
+    nu1 = alpha * cs1**2 / om1
+    siga_0, _ = lbp_solution(x, gamma, nu1, mstar, mdisk, rc)
+    siga_1, _ = lbp_solution(x, gamma, nu1, mstar, mdisk, rc, time=t)
 
     # compare results against analytical solution
 
-    f,axs = plt.subplots(1,2,figsize=(10,4),sharex=True,sharey=True)
-    axs[0].loglog(x/AU,siga_0,'-',label='analytical');
-    axs[0].loglog(x/AU,sig_0,'r--',label='initial');
+    f, axs = plt.subplots(1, 2, figsize=(10, 4), sharex=True, sharey=True)
+    axs[0].loglog(x / AU, siga_0, '-', label='analytical')
+    axs[0].loglog(x / AU, sig_0, 'r--', label='initial')
     axs[0].set_title('t = 0 years')
-    axs[0].legend();
-    axs[1].loglog(x/AU,siga_1,'-',label='analytical');
-    axs[1].loglog(x/AU,sig_g,'r--',label='simulated');
-    axs[1].set_title('t = {:3.2g} years'.format(t/year))
-    axs[1].legend();
-    axs[1].set_ylim(1e-5,1e5);
+    axs[0].legend()
+    axs[1].loglog(x / AU, siga_1, '-', label='analytical')
+    axs[1].loglog(x / AU, sig_g, 'r--', label='simulated')
+    axs[1].set_title('t = {:3.2g} years'.format(t / year))
+    axs[1].legend()
+    axs[1].set_ylim(1e-5, 1e5)
     for ax in axs:
         ax.set_xlabel('r [AU]')
-        ax.set_ylabel('$\Sigma_\mathrm{g}$ [g cm$^{-2}$]');
+        ax.set_ylabel('$\Sigma_\mathrm{g}$ [g cm$^{-2}$]')
     return f
