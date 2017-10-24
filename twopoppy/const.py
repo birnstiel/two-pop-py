@@ -13,3 +13,4 @@ year         = sc.Julian_year;          # year in s
 mu           = 2.3e0;                   # mean molecular mass in proton masses
 M_sun        = 1.9891e+33;              # mass of the sun in g
 R_sun        = 69550800000.0;           # radius of the sun in cm
+sig_h2       = 2e-15;                   # cross section of H2 [cm^2]

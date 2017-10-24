@@ -3,8 +3,8 @@ def run(x,a_0,time,sig_g,sig_d,v_gas,T,alpha,m_star,V_FRAG,RHO_S,E_drift,E_stick
     This function evolves the two population model (all model settings
     are stored in velocity). It returns the important parameters of
     the model.
-    
-    
+
+
     Arguments:
     ----------
     x : array
@@ -42,24 +42,24 @@ def run(x,a_0,time,sig_g,sig_d,v_gas,T,alpha,m_star,V_FRAG,RHO_S,E_drift,E_stick
 
     E_drift : float
         drift efficiency                [-]
-        
+
     E_stick : float
         sticking probability            [-]
 
-        
+
     Keywords:
     ---------
-    
+
     nogrowth : bool
         true: particle size fixed to a0 [False]
 
     gasevol : bool
         turn gas evolution on/off       [True]
 
-    
+
     Returns:
     ---------
-    
+
     time : array
         snapshot time            (nt)          [s]
 
@@ -92,10 +92,10 @@ def run(x,a_0,time,sig_g,sig_d,v_gas,T,alpha,m_star,V_FRAG,RHO_S,E_drift,E_stick
 
     a_t : array
         the time dependent limit (nt,nr)       [cm]
-    
+
     Note:
     -----
-    
+
     the temperature (and also alpha) can be an array (with nr elements) or it
     can be a function that function is always just called with two arguments r
     and locals(). This allows the user to access local information like surface
@@ -103,10 +103,10 @@ def run(x,a_0,time,sig_g,sig_d,v_gas,T,alpha,m_star,V_FRAG,RHO_S,E_drift,E_stick
 
         def T(x,locals_):
             return 10*(x/x[-1])**-1.5 * locals_['sig_g']/locals_['sig_g'][-1]
-    
-    
+
+
     but still keeps things simple enough to do something like this:
-    
+
         def T(x,locals_):
             return 200*(x/AU)**-1
     """
@@ -150,19 +150,19 @@ def run(x,a_0,time,sig_g,sig_d,v_gas,T,alpha,m_star,V_FRAG,RHO_S,E_drift,E_stick
     it_old          = 1
     snap_count      = 0
     progress_bar(round((it_old-1)/(n_t-1)*100),'toy model running')
-    
+
     # T can be either an array or a specific function.
     # in either case, we define a function that returns the temperature
-    
+
     if hasattr(T, '__call__'):
         Tfunc = T
     else:
         def Tfunc(x,locals_):
             return T
-            
+
     # alpha can be either an array or a specific function.
     # in either case, we define a function that returns it
-    
+
     if hasattr(alpha, '__call__'):
         alpha_func = alpha
     else:
@@ -199,15 +199,15 @@ def run(x,a_0,time,sig_g,sig_d,v_gas,T,alpha,m_star,V_FRAG,RHO_S,E_drift,E_stick
             print('it_old = %g'%it_old)
             print('dt = 0')
             sys.exit(1)
-            
+
         # update the temperature and alpha
-            
+
         _T     = Tfunc(x,locals())
         _alpha = alpha_func(x,locals())
-            
-        
+
+
         # calculate the velocity
-        
+
         res    = get_velocity(t,u_in/x,x,sig_g,v_gas,_T,_alpha,m_star,a_0,V_FRAG,RHO_S,E_drift,E_stick=E_stick,nogrowth=nogrowth)
         v      = res[0]
         D      = res[1]
@@ -310,78 +310,78 @@ def get_velocity(t,sigma_d_t,x,sigma_g,v_gas,T,alpha,m_star,a_0,V_FRAG,RHO_S,E_d
     This model takes a snapshot of temperature, gas surface density and so on
     and calculates values of the representative sizes and velocities which are
     used in the two population model.
-    
-   
+
+
     Arguments:
     ----------
     t : float
         time at which to calculate the values  [s]
-        
+
     sigma_d_t : array-like
         current dust surface density array (nr)[g cm^-2]
-        
+
     x : array-like
         nr radial grid points (nr)             [cm]
-                
+
     sigma_g : array-like
         gas surface density (nr)               [g cm^-2]
-        
+
     v_gas : array-like
         gas radial velocity (nr)               [cm s^-1]
-        
+
     T : array-like
         temperature (nr)                       [K]
-        
+
     alpha : array-like
         turbulence parameter (nr)              [-]
-        
+
     m_star : float
         stellar mass                           [g]
-        
+
     a_0 : float
         monomer size                           [cm]
-        
+
     V_FRAG : float
         fragmentation velocity                 [cm s^-1]
-        
+
     RHO_S : float
         dust internal density                  [g cm^-3]
-        
+
     E_drift : float
         drift efficiency                       [-]
-    
+
     Keywords:
     ---------
-    
+
     E_stick : float
         sticking probability                   [-]
-    
+
     nogrowth : bool
         wether a fixed particle size is used   [False]
-    
+
     Returns:
     --------
     v_bar : array
         the mass averaged velocity (nr)         [cm s^-1]
-        
+
     D : array
         t-interpolated diffusivity (nr)         [cm^2 s^-1]
 
     v_0 : array
         t-interpolated vel. of small dust (nr)  [cm s^-1]
-        
+
     v_1 : array
         t-interpolated vel. of large dust (nr)  [cm s^-1]
-        
+
     a_max_t : array
         maximum grain size (nr)                 [cm]
 
     a_df : array
         the fragmentation-by-drift limit (nr)   [cm]
-        
+
     a_fr : array
         the fragmentation limit (nr)            [cm]
-        
+
     a_dr : the drift limit (nr)                 [cm]
     """
     fudge_fr = 0.37
@@ -463,30 +463,30 @@ def get_velocity(t,sigma_d_t,x,sigma_g,v_gas,T,alpha,m_star,a_0,V_FRAG,RHO_S,E_d
     # calculate the diffusivity
     #
     D = alpha * k_b*T/mu/m_p/o_k
-    
+
     return [v_bar,D,v_0,v_1,a_max_t_out,a_df,a_fr,a_dr]
 
 
 def impl_donorcell_adv_diff_delta(n_x,x,Diff,v,g,h,K,L,flim,u_in,dt,pl,pr,ql,qr,rl,rr,coagulation_method,A,B,C,D):
     """
     Implicit donor cell advection-diffusion scheme with piecewise constant values
-    
+
     NOTE: The cell centers can be arbitrarily placed - the interfaces are assumed
     to be in the middle of the "centers", which makes all interface values
     just the arithmetic mean of the center values.
-    
+
         Perform one time step for the following PDE:
-    
+
            du    d  /    \    d  /              d  /       u   \ \
            -- + -- | u v | - -- | h(x) Diff(x) -- | g(x) ----  | | = K + L u
            dt   dx \    /    dx \              dx \      h(x) / /
-    
+
         with boundary conditions
-    
+
             dgu/h |            |
           p ----- |      + q u |       = r
              dx   |x=xbc       |x=xbc
-             
+
     Arguments:
     ----------
     n_x : int
@@ -522,10 +522,10 @@ def impl_donorcell_adv_diff_delta(n_x,x,Diff,v,g,h,K,L,flim,u_in,dt,pl,pr,ql,qr,
     dt : float
         the time step
 
-    
+
     Output:
     -------
-    
+
     u : array-like
         the updated values of u(x) after timestep dt
 
@@ -570,7 +570,7 @@ def impl_donorcell_adv_diff_delta(n_x,x,Diff,v,g,h,K,L,flim,u_in,dt,pl,pr,ql,qr,
     B[0]   = ql - pl*g[0] / (h[0]*(x[1]-x[0]))
     C[0]   =      pl*g[1] / (h[1]*(x[1]-x[0]))
     D[0]   = u_in[0]-rl
-    
+
     A[-1] =    - pr*g[-2] / (h[-2]*(x[-1]-x[-2]))
     B[-1] = qr + pr*g[-1]  / (h[-1]*(x[-1]-x[-2]))
     C[-1] = 0.
@@ -581,7 +581,7 @@ def impl_donorcell_adv_diff_delta(n_x,x,Diff,v,g,h,K,L,flim,u_in,dt,pl,pr,ql,qr,
     #  give them back to the calling routine
     # otherwise, we solve the equation
     #
-    if  coagulation_method==2:  
+    if  coagulation_method==2:
         A = A/dt           ##ok<NASGU>
         B = (B - 1.)/dt   ##ok<NASGU>
         C = C/dt           ##ok<NASGU>
@@ -591,7 +591,7 @@ def impl_donorcell_adv_diff_delta(n_x,x,Diff,v,g,h,K,L,flim,u_in,dt,pl,pr,ql,qr,
         # the old way
         #
         #rhs = u - D
-    
+
         #
         # the delta-way
         #
@@ -608,61 +608,61 @@ def impl_donorcell_adv_diff_delta(n_x,x,Diff,v,g,h,K,L,flim,u_in,dt,pl,pr,ql,qr,
         #u = u2   # old way
         #
         u_out = u_in+u2 # delta way
-    
+
     return u_out
 
 def tridag(a,b,c,r,n):
     """
     Solves a tridiagnoal matrix equation
-    
+
         M * u  =  r
-    
+
     where M is tridiagonal, and u and r are vectors of length n.
-    
+
     Arguments:
     ----------
-    
+
     a : array
         lower diagonal entries
-    
+
     b : array
         diagonal entries
-    
+
     c : array
         upper diagonal entries
-    
+
     r : array
         right hand side vector
-    
+
     n : int
         size of the vectors
-    
+
     Returns:
     --------
-    
+
     u : array
         solution vector
     """
     import numpy as np
-    
+
     gam = np.zeros(n)
     u   = np.zeros(n)
-    
+
     if b[0]==0.:
         raise ValueError('tridag: rewrite equations')
-    
+
     bet = b[0]
-    
+
     u[0]=r[0]/bet
-    
+
     for j in np.arange(1,n):
         gam[j] = c[j-1]/bet
         bet    = b[j]-a[j]*gam[j]
-        
+
         if bet==0:
             raise ValueError('tridag failed')
         u[j]   = (r[j]-a[j]*u[j-1])/bet
-    
+
     for j in np.arange(n-2,-1,-1):
         u[j] = u[j]-gam[j+1]*u[j+1]
     return u
@@ -675,77 +675,33 @@ def progress_bar(perc,text=''):
 
     Arguments:
     ----------
-    
+
     perc : float
         The percentage of completion, should be
         between 0 and 100. Only 100.0 finishes with the
         word "Done!".
-         
+
     Keywords:
     ---------
-    
+
     text : str
         Possible text for describing the running process.
-    
+
     Example:
     --------
-    
+
     >>> import time
     >>> for i in linspace(0,100,1000):
     >>>     progress_bar(i,text='Waiting')
     >>>     time.sleep(0.005)
     """
-    import sys 
-    
+    import sys
+
     if text!='': text = text+' ... '
-    
+
     if perc==100.0:
         sys.stdout.write('\r'+text+'Done!\n')
         sys.stdout.flush()
     else:
         sys.stdout.write('\r'+text+'%d %%'%round(perc))
         sys.stdout.flush()
-
-
-distri_available = False
-_helperfiles     = ['distribution_reconstruction.py','aux_functions.py']
-_gitpath         = 'https://raw.githubusercontent.com/birnstiel/Birnstiel2015_scripts/master/'
-
-
-try:
-    from distribution_reconstruction import reconstruct_size_distribution
-    distri_available=True
-except (ImportError, SyntaxError):
-    import os             as _os
-    import inspect        as _inspect
-    import ssl            as _ssl
-    import warnings       as _warnings
-    import traceback      as _traceback
-    import urllib.request as _request
-    
-    print('could not import distribution_reconstruction.py, will download it and retry')
-    
-    _module_path = _os.path.dirname(_os.path.abspath(_inspect.getfile(_inspect.currentframe())))
-    for _file in _helperfiles:
-        try:
-            ctx = _ssl.create_default_context()
-            ctx.check_hostname = False
-            ctx.verify_mode = _ssl.CERT_NONE
-            open(_module_path+_os.sep+_file, 'wb').write(_request.urlopen(_gitpath+_file,context=ctx).read())
-        except:
-            _warnings.warn('Could not download {}'.format(_file))
-            for s in _traceback.format_exc().split('\n'):  print(4*' '+s)
-            
-    try:
-        from distribution_reconstruction import reconstruct_size_distribution
-        distri_available=True
-        print('success!')
-    except (ImportError,SyntaxError):
-        for _file in _helperfiles: _os.system('wget --no-check-certificate '+_gitpath+_file+' -O '+_module_path+_os.sep+_file)
-        try:
-            from distribution_reconstruction import reconstruct_size_distribution
-            distri_available=True
-            print('success!')
-        except (ImportError,SyntaxError):
-            distri_available=False
-            print('Could not import distribution_reconstruction.py')

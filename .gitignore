@@ -3,7 +3,5 @@
 .settings/
 .pydevproject
 *.pyc
-twopoppy/distribution_reconstruction.py
-twopoppy/aux_functions.py
 .ipynb_checkpoints/
 twopoppy.egg-info

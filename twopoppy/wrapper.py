@@ -3,11 +3,11 @@
 -------------------------------------------------------------------------------
          _____ _    _  _____       ______ ___________      ________   __
         |_   _| |  | ||  _  |      | ___ \  _  | ___ \     | ___ \ \ / /
-          | | | |  | || | | |______| |_/ / | | | |_/ /_____| |_/ /\ V / 
-          | | | |/\| || | | |______|  __/| | | |  __/______|  __/  \ /  
-          | | \  /\  /\ \_/ /      | |   \ \_/ / |         | |     | |  
-          \_/  \/  \/  \___/       \_|    \___/\_|         \_|     \_/  
-                                                                              
+          | | | |  | || | | |______| |_/ / | | | |_/ /_____| |_/ /\ V /
+          | | | |/\| || | | |______|  __/| | | |  __/______|  __/  \ /
+          | | \  /\  /\ \_/ /      | |   \ \_/ / |         | |     | |
+          \_/  \/  \/  \___/       \_|    \___/\_|         \_|     \_/
+
 
 This script runs a two-population dust model according to Birnstiel, Klahr,
 Ercolano, A&A (2012). The output of the code is described in the README.md file.
@@ -28,47 +28,48 @@ results are reproducible, as the code can change.
 [1]: http://dx.doi.org/10.1051/0004-6361/201118136
 [2]: http://dx.doi.org/10.1088/2041-8205/813/1/L14
 
-------------------------------------------------------------------------------- 
+-------------------------------------------------------------------------------
 """
 import gzip, bz2, os, sys
 import pickle
 from .args import args
 from .results import results
+from .distribution_reconstruction import reconstruct_size_distribution
 
 compressors  = {
     'no match':[open,'raw'],'raw':[open,'raw'],
     'gzip':[gzip.GzipFile,'pgz'],'gz':[gzip.GzipFile,'pgz'],
     'bz2':[bz2.BZ2File,'pbz2']}
-    
+
 class task_status(object):
     """
     Context manager to show that a task is in progrees, or finished.
-    
+
     Arguments:
     ----------
-    
+
     start : string
         string description of the process
-    
+
     Keywords:
     ---------
-    
+
     end : string
         string for announcing completion of process, such as 'Done!'
-        
+
     dots : string
         what to print in between, defaults to '...'
-        
+
     blink : bool
         default: True; causes the dots to blink using ANSI control characters
-    
+
     Example:
     --------
-    
+
     >>> import time
     >>> with task_status('Loading') as t: time.sleep(5)
     Loading ... Done!
-    
+
     """
     import sys
     def __init__(self, start, end='Done!', dots="...",blink=True):
@@ -89,13 +90,13 @@ class task_status(object):
 def get_compression_type(filename):
     """
     Pass a file name. It if looks like it's compressed with one of these
-    
+
     - gz
     - bz2
     - zip
-    
+
     that name will be returned.
-    
+
     """
     magic_dict = {
         "\x1f\x8b\x08": "gz",
@@ -104,10 +105,10 @@ def get_compression_type(filename):
         }
 
     max_len = max(len(x) for x in magic_dict)
-    
+
     try:
         with open(filename,'rb') as f: file_start = f.read(max_len)
-            
+
         for magic, filetype in magic_dict.items():
             if file_start.startswith(magic):
                 return filetype
@@ -123,26 +124,26 @@ def load_grid_results(fname):
     Load list of grid results from file
     """
     compressor,suffix = compressors[get_compression_type(fname)]
-    
+
     with task_status('Loading {}-file \'{}\''.format(suffix,fname)), compressor(fname) as f: res=pickle.load(f)
     return res
-    
+
 def write_grid_results(res,fname,compression='gzip'):
     """
     Write list of grid results to file.
-    
+
     Arguments:
     ----------
-    
+
     res : list
         list of two_pop_run.results instances
-        
+
     fname : string
         filename to write to
-        
+
     Keywords:
     ---------
-    
+
     compression : string
         possible compression mechanisms are 'raw', 'pgz', 'pbz2'.
     """
@@ -157,49 +158,49 @@ def lbp_solution(R,gamma,nu1,mstar,mdisk,RC0,time=0):
     Calculate Lynden-Bell & Pringle self similar solution.
     All values need to be either given with astropy-units, or
     in as pure float arrays in cgs units.
-    
+
     Arguments:
     ----------
-    
+
     R : array
         radius array
-    
+
     gamma : float
         viscosity exponent
-    
+
     nu1 : float
         viscosity at R[0]
-    
+
     mstar : float
         stellar mass
-    
+
     mdisk : float
         disk mass at t=0
-    
+
     RC0 : float
         critical radius at t=0
-    
+
     Keywords:
     ---------
-    
+
     time : float
-        physical "age" of the analytical solution 
-    
+        physical "age" of the analytical solution
+
     Output:
     -------
     sig_g,RC(t)
-    
+
     sig_g : array
         gas surface density, with or without unit, depending on input
-    
+
     RC : the critical radius
-    
+
     """
     import astropy.units as u
     import numpy as np
 
     # assume cgs if no units are given
-    
+
     units = True
     if not hasattr(R,'unit'):
         R     = R*u.cm
@@ -215,27 +216,27 @@ def lbp_solution(R,gamma,nu1,mstar,mdisk,RC0,time=0):
     if time is None: time = 0
     if not hasattr(time,'unit'):
         time  = time*u.s
-        
+
     # convert to variables as in Hartmann paper
-    
+
     R1   = R[0]
     r    = R/R1
     ts   = 1./(3*(2-gamma)**2)*R1**2/nu1
-    
+
     T0   = (RC0/R1)**(2.-gamma)
     toff = (T0-1)*ts
-    
+
     T1   = (time+toff)/ts+1
     RC1  = T1**(1./(2.-gamma))*R1
-            
+
     # the normalization constant
-    
+
     C  = (-3*mdisk*nu1*T0**(1./(4. - 2.*gamma))*(-2 + gamma))/2./R1**2
-    
+
     # calculate the surface density
-    
+
     sig_g = C/(3*np.pi*nu1*r)*T1**(-(5./2.-gamma)/(2.-gamma))*np.exp(-(r**(2.-gamma))/T1)
-    
+
     if units:
         return sig_g,RC1
     else:
@@ -245,20 +246,20 @@ def model_wrapper(ARGS,plot=False,save=False):
     """
     This is a wrapper for the two-population model `model.run`, in which
     the disk profile is a self-similar solution.
-    
+
     Arguments:
     ----------
     ARGS : instance of the input parameter object
-    
+
     Keywords:
     ---------
-    
+
     plot : bool
           whether or not to plot the default figures
 
     save : bool
           whether or not to write the data to disk
-    
+
     Output:
     -------
     results : instance of the results object
@@ -317,18 +318,18 @@ def model_wrapper(ARGS,plot=False,save=False):
         raise ValueError('stellar evolution not implemented')
 
     # if T is not set, define default temperature function.
-        
+
     if T is None:
         def T(x,locals_):
             return ( (0.05**0.25*tstar * (x /rstar)**-0.5)**4 + (7.)**4)**0.25
-        
-    # if temperature should not evolve, then replace the function with its initial value        
-        
+
+    # if temperature should not evolve, then replace the function with its initial value
+
     if not tempevol and hasattr(T,'__call__'):
         T = T(x,locals())
-    
+
     # set the initial surface density & velocity according Lynden-Bell & Pringle solution
-    
+
     if isinstance(alpha, (list, tuple, np.ndarray)):
         alpha_fct = lambda x,locals_: alpha
         print('alpha given as array, ignoring gamma index when setting alpha')
@@ -336,8 +337,8 @@ def model_wrapper(ARGS,plot=False,save=False):
         alpha_fct = alpha
     elif isinstance(alpha,Number):
         alpha_fct = lambda x,locals_: alpha*(x/x[0])**(gamma-1)
-    
-    try:  
+
+    try:
         # this one could break if alpha_function works only in model.run
         om1       = np.sqrt(Grav*args.mstar/x[0]**3)
         cs1       = np.sqrt(k_b*T[0]/mu/m_p)
@@ -347,19 +348,19 @@ def model_wrapper(ARGS,plot=False,save=False):
     except:
         sigma_g   = mdisk*(2.-gamma)/(2.*np.pi*rc**2)*(x/rc)**-gamma*np.exp(-(x/rc)**(2.-gamma))
         v_gas     = np.zeros(sigma_g.shape)
-        
+
     # truncation
-        
+
     sigma_g[x>=rt] = 1e-100
-        
+
     # normalize disk mass
-     
+
     sigma_g = np.maximum(sigma_g,1e-100)
     sigma_g = sigma_g/np.trapz(2*np.pi*x*sigma_g,x=x)*mdisk
     sigma_d = sigma_g*d2g
-    
+
     # call the model
-    
+
     TI,SOLD,SOLG,VD,VG,v_0,v_1,a_dr,a_fr,a_df,a_t,Tout,alphaout = model.run(x,a0,timesteps,sigma_g,sigma_d,v_gas,T,alpha_fct,mstar,vfrag,rhos,edrift,E_stick=estick,nogrowth=False,gasevol=gasevol)
     #
     # ================================
@@ -368,40 +369,37 @@ def model_wrapper(ARGS,plot=False,save=False):
     #
     a  = np.logspace(np.log10(a0),np.log10(5*a_t.max()),n_a)
     print('\n'+48*'-')
-    if model.distri_available:
-        try:
-            print('reconstructing size distribution')
-            reconstruct_size_distribution = model.reconstruct_size_distribution
-            it = -1
-            sig_sol,_,_,_,_,_ = reconstruct_size_distribution(x,a,TI[it],SOLG[it],SOLD[-1],alpha*np.ones(nr),rhos,T,mstar,vfrag,a_0=a0)
-        except Exception:
-            import traceback,warnings
-            w = 'Could not reconstruct size distribution\nTraceback:\n----------\n' 
-            w+= traceback.format_exc()  
-            w+= '\n----------'
-            warnings.warn(w)
-            a       = None
-            sig_sol = None
-    else:
-        print('distribution reconstruction is not available!')
+
+    try:
+        print('reconstructing size distribution')
+        it = -1
+        sig_sol,_,_,_,_,_ = reconstruct_size_distribution(x,a,TI[it],SOLG[it],SOLD[-1],alpha*np.ones(nr),rhos,T,mstar,vfrag,a_0=a0)
+    except Exception:
+        import traceback,warnings
+        w = 'Could not reconstruct size distribution\nTraceback:\n----------\n'
+        w+= traceback.format_exc()
+        w+= '\n----------'
+        warnings.warn(w)
+        a       = None
+        sig_sol = None
     #
     # fill the results and write them out
-    #    
+    #
     res = results()
     res.sigma_g   = SOLG
     res.sigma_d   = SOLD
     res.x         = x
-    
+
     if hasattr(T,'__call__'):
         res.T = Tout
     else:
         res.T = T
-        
+
     if hasattr(alpha,'__call__'):
         res.alpha = alphaout
     else:
         res.alpha = alpha
-        
+
     res.timesteps = timesteps
     res.v_gas     = VG
     res.v_dust    = VD
@@ -413,10 +411,9 @@ def model_wrapper(ARGS,plot=False,save=False):
     res.a_t       = a_t
     res.args      = ARGS
     res.a         = a
-    
-    if model.distri_available:
-        res.sig_sol = sig_sol
-        
+
+    res.sig_sol = sig_sol
+
     if save: res.write()
     #
     # ========
@@ -425,7 +422,7 @@ def model_wrapper(ARGS,plot=False,save=False):
     #
     if plot:
         print(48*'-')
-        print('plotting results ...') 
+        print('plotting results ...')
         try:
             from widget import plotter
             #
@@ -438,26 +435,26 @@ def model_wrapper(ARGS,plot=False,save=False):
             plotter(x=x/AU,data=SOLD,data2=SOLG,times=TI/year,xlog=1,ylog=1,xlim=[0.5,500],ylim=[2e-5,2e5],xlabel='r [AU]',i_start=0,ylabel='$\Sigma_d$ [g cm $^{-2}$]')
         except ImportError:
             print('Could not import GUI, will not plot GUI')
-        
-        if model.distri_available:
-            _,ax = plt.subplots(tight_layout=True)
-            gsf  = 2*(a[1]/a[0]-1)/(a[1]/a[0]+1)
-            mx   = np.ceil(np.log10(sig_sol.max()/gsf))
-            cc=ax.contourf(x/AU,a,np.log10(np.maximum(sig_sol/gsf,1e-100)),np.linspace(mx-10,mx,50),cmap='OrRd')
-            ax.set_xscale('log')
-            ax.set_yscale('log')
-            ax.set_xlabel('radius [AU]')
-            ax.set_ylabel('particle size [cm]')
-            cb = plt.colorbar(cc)
-            cb.set_ticks(np.arange(mx-10,mx+1))
-            cb.set_label('$a\cdot\Sigma_\mathrm{d}(r,a)$ [g cm$^{-2}$]')
+
+        _,ax = plt.subplots(tight_layout=True)
+        gsf  = 2*(a[1]/a[0]-1)/(a[1]/a[0]+1)
+        mx   = np.ceil(np.log10(sig_sol.max()/gsf))
+        cc=ax.contourf(x/AU,a,np.log10(np.maximum(sig_sol/gsf,1e-100)),np.linspace(mx-10,mx,50),cmap='OrRd')
+        ax.set_xscale('log')
+        ax.set_yscale('log')
+        ax.set_xlabel('radius [AU]')
+        ax.set_ylabel('particle size [cm]')
+        cb = plt.colorbar(cc)
+        cb.set_ticks(np.arange(mx-10,mx+1))
+        cb.set_label('$a\cdot\Sigma_\mathrm{d}(r,a)$ [g cm$^{-2}$]')
+
         plt.show()
-    
+
     print(48*'-'+'\n')
     print('ALL DONE'.center(48))
     print('\n'+48*'-')
     return res
-    
+
 def model_wrapper_test():
     """
     Test gas evolution: use small rc and large alpha
@@ -478,9 +475,9 @@ def model_wrapper_test_plot(res):
     import matplotlib.pyplot as plt
     from matplotlib.pyplot import style
     style.use(['seaborn-dark',{'axes.grid': True,'font.size':10}]);
-    
+
     # read the results
-    
+
     args  = res.args
     x     = res.x
     sig_0 = res.sigma_g[0]
@@ -492,17 +489,17 @@ def model_wrapper_test_plot(res):
     rc    = args.rc
     mdisk = args.mdisk
     mstar = args.mstar
-    
+
     # calculate analytical solution
-    
+
     cs1 = np.sqrt(k_b*temp[0]/mu/m_p)
     om1 = np.sqrt(Grav*mstar/x[0]**3)
     nu1 = alpha*cs1**2/om1
     siga_0,_ = lbp_solution(x,gamma,nu1,mstar,mdisk,rc)
     siga_1,_ = lbp_solution(x,gamma,nu1,mstar,mdisk,rc,time=t)
-    
+
     # compare results against analytical solution
-    
+
     f,axs = plt.subplots(1,2,figsize=(10,4),sharex=True,sharey=True)
     axs[0].loglog(x/AU,siga_0,'-',label='analytical');
     axs[0].loglog(x/AU,sig_0,'r--',label='initial');
@@ -517,4 +514,3 @@ def model_wrapper_test_plot(res):
         ax.set_xlabel('r [AU]')
         ax.set_ylabel('$\Sigma_\mathrm{g}$ [g cm$^{-2}$]');
     return f
-    
