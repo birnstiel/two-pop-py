@@ -53,7 +53,7 @@ class results:
         np.savetxt(dirname + os.sep + 'a_df.dat',    self.a_df)                     # noqa
         np.savetxt(dirname + os.sep + 'a_t.dat',     self.a_t)                      # noqa
 
-        if model.distri_available and self.a is not None and self.sig_sol is not None:
+        if self.a is not None and self.sig_sol is not None:
             np.savetxt(dirname + os.sep + 'a.dat', self.a)
             np.savetxt(dirname + os.sep + 'sigma_d_a.dat', self.sig_sol)
 
