@@ -123,7 +123,7 @@ def trace_line_though_grid(xi, yi, f, x=None, y=None):
     return result
 
 
-def reconstruct_size_distribution(r, a, t, sig_g, sig_d, alpha, rho_s, T, M_star, v_f, a_0=1e-4, fix_pd=None, ir_0=2, return_a=False):
+def reconstruct_size_distribution(r, a, t, sig_g, sig_d, alpha, rho_s, T, M_star, v_f, a_0=1e-4, fix_pd=None, estick=1.0, ir_0=2, return_a=False):
     """
     Reconstructs the approximate size distribution based on the recipe of Birnstiel et al. 2015, ApJ.
 
@@ -165,6 +165,9 @@ def reconstruct_size_distribution(r, a, t, sig_g, sig_d, alpha, rho_s, T, M_star
 
     a_0 : float
     :    initial particle size [cm]
+
+    estick : float
+    :    sticking probability [-]
 
     fix_pd : None | float
     :    float: set the inward diffusion slope to this values
@@ -212,12 +215,12 @@ def reconstruct_size_distribution(r, a, t, sig_g, sig_d, alpha, rho_s, T, M_star
     #
     # drift size
     #
-    a_dr = 0.55 * 2 / pi * sig_d / rho_s * r**2. * \
+    a_dr = estick * 0.55 * 2 / pi * sig_d / rho_s * r**2. * \
         (Grav * M_star / r**3) / (abs(gamma) * cs**2)
     #
     # time dependent growth
     #
-    t_grow = sig_g / (om * sig_d)
+    t_grow = sig_g / (estick * om * sig_d)
     with warnings.catch_warnings():
         warnings.filterwarnings('ignore', r'overflow encountered in exp')
         a_grow = a_0 * np.exp(t / t_grow)
@@ -461,7 +464,7 @@ def reconstruct_size_distribution(r, a, t, sig_g, sig_d, alpha, rho_s, T, M_star
                 pwl = np.log(sig_3[imax, ir] / sig_3[i_full, ir]
                              ) / np.log(a[imax] / a[i_full])
                 pwl = max(3,pwl)
-                
+
         sig_3[:i_full, ir] = sig_3[i_full, ir] * (a[:i_full] / a[i_full])**pwl
     #
     # Now the problem is how to stitch the 3 distributions together,
