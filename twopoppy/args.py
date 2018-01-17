@@ -26,6 +26,7 @@ class args:
                 ['gasevol',  bool],  # noqa
                 ['tempevol', bool],  # noqa
                 ['starevol', bool],  # noqa
+                ['dir',      str],  # noqa
             ]
 
     # set default values
@@ -113,6 +114,7 @@ class args:
 
         # print other arguments
 
+        s += 'Output directory '.ljust(17) + ' = ' + self.dir.rjust(15) + '\n'
         s += 'Gas         evol.'.ljust(17) + ' = ' + (self.gasevol * 'on' + (not self.gasevol) * 'off').rjust(15) + '\n'
         s += 'Temperature evol.'.ljust(17) + ' = ' + (self.tempevol * 'on' + (not self.tempevol) * 'off').rjust(15) + '\n'
         s += 'Stellar     evol.'.ljust(17) + ' = ' + (self.starevol * 'on' + (not self.starevol) * 'off').rjust(15) + '\n'

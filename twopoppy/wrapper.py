@@ -393,7 +393,7 @@ def model_wrapper(ARGS, plot=False, save=False):
         print('reconstructing size distribution')
         it = -1
         sig_sol, _, _, _, _, _ = reconstruct_size_distribution(
-            x, a, TI[it], SOLG[it], SOLD[it], alpha * np.ones(nr), rhos, Tout[it], mstar, vfrag, a_0=a0)
+            x, a, TI[it], SOLG[it], SOLD[it], alpha * np.ones(nr), rhos, Tout[it], mstar, vfrag, a_0=a0, estick=estick)
 
     except Exception:
         import traceback
