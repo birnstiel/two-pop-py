@@ -1,4 +1,5 @@
-def run(x, a_0, time, sig_g, sig_d, v_gas, T, alpha, m_star, V_FRAG, RHO_S, E_drift, E_stick=1., nogrowth=False, gasevol=True):
+def run(x, a_0, time, sig_g, sig_d, v_gas, T, alpha, m_star, V_FRAG, RHO_S,
+        E_drift, E_stick=1., nogrowth=False, gasevol=True, alpha_gas=None):
     """
     This function evolves the two population model (all model settings
     are stored in velocity). It returns the important parameters of
@@ -28,7 +29,7 @@ def run(x, a_0, time, sig_g, sig_d, v_gas, T, alpha, m_star, V_FRAG, RHO_S, E_dr
     T : array
         temperature array (nr)/function [K]
 
-    alpha : array
+    alpha : array | function
         turbulence parameter (nr)       [-]
 
     m_star : float
@@ -55,6 +56,9 @@ def run(x, a_0, time, sig_g, sig_d, v_gas, T, alpha, m_star, V_FRAG, RHO_S, E_dr
 
     gasevol : bool
         turn gas evolution on/off       [True]
+
+    alpha_gas : None | array | function
+        if not None: use this for the gas [-]
 
 
     Returns:
@@ -147,6 +151,7 @@ def run(x, a_0, time, sig_g, sig_d, v_gas, T, alpha, m_star, V_FRAG, RHO_S, E_dr
     a_dr            = zeros([n_t,n_r])  # noqa
     Tout            = zeros([n_t,n_r])  # noqa
     alphaout        = zeros([n_t,n_r])  # noqa
+    alphagasout     = zeros([n_t,n_r])  # noqa
     u_in            = solution_d[0,:]*x # noqa
     it_old          = 1                 # noqa
     snap_count      = 0                 # noqa
@@ -171,6 +176,17 @@ def run(x, a_0, time, sig_g, sig_d, v_gas, T, alpha, m_star, V_FRAG, RHO_S, E_dr
         def alpha_func(x, locals_):
             return alpha
 
+    # the same for alpha_gas
+
+    if alpha_gas is None:
+        alpha_gas = alpha
+
+    if hasattr(alpha_gas, '__call__'):
+        alpha_gas_func = alpha_gas
+    else:
+        def alpha_gas_func(x, locals_):
+            return alpha_gas
+
     #
     # save the velocity which will be used
     #
@@ -178,16 +194,17 @@ def run(x, a_0, time, sig_g, sig_d, v_gas, T, alpha, m_star, V_FRAG, RHO_S, E_dr
                        alpha_func(x, locals()), m_star, a_0, V_FRAG, RHO_S,
                        E_drift, E_stick=E_stick, nogrowth=nogrowth)
 
-    v_bar[0, :]    = res[0]                     # noqa
-    Diff[0, :]     = res[1]                     # noqa
-    v_0[0, :]      = res[2]                     # noqa
-    v_1[0, :]      = res[3]                     # noqa
-    a_t[0, :]      = res[4]                     # noqa
-    a_df[0, :]     = res[5]                     # noqa
-    a_fr[0, :]     = res[6]                     # noqa
-    a_dr[0, :]     = res[7]                     # noqa
-    Tout[0, :]     = Tfunc(x, locals())         # noqa
-    alphaout[0, :] = alpha_func(x, locals())    # noqa
+    v_bar[0, :]       = res[0]                      # noqa
+    Diff[0, :]        = res[1]                      # noqa
+    v_0[0, :]         = res[2]                      # noqa
+    v_1[0, :]         = res[3]                      # noqa
+    a_t[0, :]         = res[4]                      # noqa
+    a_df[0, :]        = res[5]                      # noqa
+    a_fr[0, :]        = res[6]                      # noqa
+    a_dr[0, :]        = res[7]                      # noqa
+    Tout[0, :]        = Tfunc(x, locals())          # noqa
+    alphaout[0, :]    = alpha_func(x, locals())     # noqa
+    alphagasout[0, :] = alpha_gas_func(x, locals()) # noqa
 
     #
     # the loop
@@ -211,6 +228,7 @@ def run(x, a_0, time, sig_g, sig_d, v_gas, T, alpha, m_star, V_FRAG, RHO_S, E_dr
 
         _T = Tfunc(x, locals())
         _alpha = alpha_func(x, locals())
+        _alpha_gas = alpha_gas_func(x, locals())
 
         # calculate the velocity
 
@@ -254,7 +272,7 @@ def run(x, a_0, time, sig_g, sig_d, v_gas, T, alpha, m_star, V_FRAG, RHO_S, E_dr
         # update the gas
         #
         if gasevol:
-            nu_gas = _alpha * k_b * _T / mu / m_p * sqrt(x**3 / Grav / m_star)
+            nu_gas = _alpha_gas * k_b * _T / mu / m_p * sqrt(x**3 / Grav / m_star)
             u_gas_old = sig_g * x
             u_gas = u_gas_old[:]
             v_gas = zeros(n_r)
@@ -306,18 +324,19 @@ def run(x, a_0, time, sig_g, sig_d, v_gas, T, alpha, m_star, V_FRAG, RHO_S, E_dr
             #
             # store the rest
             #
-            v_0[snap_count, :]      = res[2]  # noqa
-            v_1[snap_count, :]      = res[3]  # noqa
-            a_t[snap_count, :]      = res[4]  # noqa
-            a_df[snap_count, :]     = res[5]  # noqa
-            a_fr[snap_count, :]     = res[6]  # noqa
-            a_dr[snap_count, :]     = res[7]  # noqa
-            Tout[snap_count, :]     = _T      # noqa
-            alphaout[snap_count, :] = _alpha  # noqa
+            v_0[snap_count, :]         = res[2]      # noqa
+            v_1[snap_count, :]         = res[3]      # noqa
+            a_t[snap_count, :]         = res[4]      # noqa
+            a_df[snap_count, :]        = res[5]      # noqa
+            a_fr[snap_count, :]        = res[6]      # noqa
+            a_dr[snap_count, :]        = res[7]      # noqa
+            Tout[snap_count, :]        = _T          # noqa
+            alphaout[snap_count, :]    = _alpha      # noqa
+            alphagasout[snap_count, :] = _alpha_gas  # noqa
 
     progress_bar(100., 'toy model running')
 
-    return time, solution_d, solution_g, v_bar, vgas, v_0, v_1, a_dr, a_fr, a_df, a_t, Tout, alphaout
+    return time, solution_d, solution_g, v_bar, vgas, v_0, v_1, a_dr, a_fr, a_df, a_t, Tout, alphaout, alphagasout
 
 
 def get_velocity(t, sigma_d_t, x, sigma_g, v_gas, T, alpha, m_star, a_0, V_FRAG, RHO_S, E_drift, E_stick=1., nogrowth=False):
@@ -349,6 +368,7 @@ def get_velocity(t, sigma_d_t, x, sigma_g, v_gas, T, alpha, m_star, a_0, V_FRAG,
 
     alpha : array-like
         turbulence parameter (nr)              [-]
+        affects a_frag and diffusivity
 
     m_star : float
         stellar mass                           [g]
