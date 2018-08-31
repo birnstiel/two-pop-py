@@ -23,9 +23,18 @@ class args:
                 ['edrift',  float],  # noqa
                 ['estick',  float],  # noqa
                 ['T',       float],  # noqa
+                ['st_min',  float],
+                ['st_max',  float],
+                ['peff',    float],
+                ['tlife',   float],
+                ['fm_f' ,  float],
+                ['fm_d',   float],
+                ['dice',   float],
                 ['gasevol',  bool],  # noqa
                 ['tempevol', bool],  # noqa
                 ['starevol', bool],  # noqa
+                ['ptesim' ,  bool],
+                ['stokes' ,  bool],
                 ['dir',      str],  # noqa
             ]
 
@@ -46,15 +55,24 @@ class args:
     r1      = 3e3*_c.AU         # noqa
     mdisk   = 0.1*mstar         # noqa
     rhos    = 1.156             # noqa
+    st_min  = 1e-2
+    st_max  = 10.
+    peff    = 0.1
+    tlife   = 100
     vfrag   = 1000              # noqa
     a0      = 1e-5              # noqa
     gamma   = 1.0               # noqa
     edrift  = 1.0               # noqa
     estick  = 1.0               # noqa
+    fm_f    = 0.37
+    fm_d    = 0.55
+    dice    = 0.46
 
     gasevol  = True   # noqa
     tempevol = False  # noqa
     starevol = False  # noqa
+    ptesim   = True
+    stokes   = False
     T        = None   # noqa
     dir      = 'data' # noqa
 
@@ -118,6 +136,7 @@ class args:
         s += 'Gas         evol.'.ljust(17) + ' = ' + (self.gasevol * 'on' + (not self.gasevol) * 'off').rjust(15) + '\n'
         s += 'Temperature evol.'.ljust(17) + ' = ' + (self.tempevol * 'on' + (not self.tempevol) * 'off').rjust(15) + '\n'
         s += 'Stellar     evol.'.ljust(17) + ' = ' + (self.starevol * 'on' + (not self.starevol) * 'off').rjust(15) + '\n'
+        s += 'Planetisimal from.'.ljust(17) + ' = ' + (self.ptesim * 'on' + (not self.ptesim) * 'off').rjust(15) + '\n'
 
         # print temperature
 

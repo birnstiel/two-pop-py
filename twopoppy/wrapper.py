@@ -302,6 +302,10 @@ def model_wrapper(ARGS, plot=False, save=False):
     r1       = ARGS.r1          # noqa
     mdisk    = ARGS.mdisk       # noqa
     rhos     = ARGS.rhos        # noqa
+    peff     = ARGS.peff
+    st_min   = ARGS.st_min
+    st_max   = ARGS.st_max
+    tlife    = ARGS.tlife
     vfrag    = ARGS.vfrag       # noqa
     a0       = ARGS.a0          # noqa
     gamma    = ARGS.gamma       # noqa
@@ -310,7 +314,12 @@ def model_wrapper(ARGS, plot=False, save=False):
     gasevol  = ARGS.gasevol     # noqa
     tempevol = ARGS.tempevol    # noqa
     starevol = ARGS.starevol    # noqa
+    ptesim   = ARGS.ptesim
     T        = ARGS.T           # noqa
+    dice     = ARGS.dice
+    f_f      = ARGS.fm_f
+    f_d      = ARGS.fm_d
+    stokes   = ARGS.stokes
     #
     # print setup
     #
@@ -328,7 +337,7 @@ def model_wrapper(ARGS, plot=False, save=False):
     nri = nr + 1
     xi = np.logspace(np.log10(r0), np.log10(r1), nri)
     x = 0.5 * (xi[1:] + xi[:-1])
-    timesteps = np.logspace(4, np.log10(tmax / year), nt) * year
+    timesteps = np.logspace(3, np.log10(tmax / year), nt) * year
     if starevol:
         raise ValueError('stellar evolution not implemented')
 
@@ -378,8 +387,8 @@ def model_wrapper(ARGS, plot=False, save=False):
 
     # call the model
 
-    TI, SOLD, SOLG, VD, VG, v_0, v_1, a_dr, a_fr, a_df, a_t, Tout, alphaout, _ = model.run(
-        x, a0, timesteps, sigma_g, sigma_d, v_gas, T, alpha_fct, mstar, vfrag, rhos, edrift, E_stick=estick, nogrowth=False, gasevol=gasevol)
+    TI, SOLD, SOLG, SOLP, VD, VG, v_0, v_1, a_dr, a_fr, a_df, a_t, Tout, alphaout, _ = model.run(
+        x, a0, timesteps, sigma_g, sigma_d, v_gas, T, alpha_fct, mstar, vfrag, rhos, peff, st_min, st_max, tlife, f_f, f_d, dice, edrift, stokes, E_stick=estick, nogrowth=False, gasevol=gasevol,ptesim=ptesim)
 
     #
     # ================================
@@ -410,6 +419,7 @@ def model_wrapper(ARGS, plot=False, save=False):
     res = results()
     res.sigma_g = SOLG
     res.sigma_d = SOLD
+    res.sigma_p = SOLP
     res.x = x
 
     if hasattr(T, '__call__'):
