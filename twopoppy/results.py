@@ -10,6 +10,7 @@ class results:
     alpha        = None # noqa
     sigma_g      = None # noqa
     sigma_d      = None # noqa
+    sigma_p      = None #
     v_gas        = None # noqa
     v_dust       = None # noqa
     v_0          = None # noqa
@@ -40,6 +41,7 @@ class results:
 
         np.savetxt(dirname + os.sep + 'sigma_g.dat', self.sigma_g)                  # noqa
         np.savetxt(dirname + os.sep + 'sigma_d.dat', self.sigma_d)                  # noqa
+        np.savetxt(dirname + os.sep + 'sigma_p.dat', self.sigma_p)
         np.savetxt(dirname + os.sep + 'x.dat',       self.x)                        # noqa
         np.savetxt(dirname + os.sep + 'T.dat',       self.T)                        # noqa
         np.savetxt(dirname + os.sep + 'alpha.dat',   np.array(self.alpha, ndmin=1)) # noqa
@@ -79,6 +81,7 @@ class results:
 
         self.sigma_g = np.loadtxt(dirname + os.sep + 'sigma_g.dat')
         self.sigma_d = np.loadtxt(dirname + os.sep + 'sigma_d.dat')
+        self.sigma_p = np.loadtxt(dirname + os.sep + 'sigma_p.dat')
         self.x = np.loadtxt(dirname + os.sep + 'x.dat')
         self.T = np.loadtxt(dirname + os.sep + 'T.dat')
         self.alpha = np.loadtxt(dirname + os.sep + 'alpha.dat')
