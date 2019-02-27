@@ -117,6 +117,9 @@ def run(x, a_0, time, sig_g, sig_d, v_gas, T, alpha, m_star, V_FRAG, RHO_S,
     from numpy import ones, zeros, Inf, maximum, minimum, sqrt, where
     from .const import year, Grav, k_b, mu, m_p
     import sys
+
+    CFL = 0.1
+
     #
     # some setup
     #
@@ -251,7 +254,7 @@ def run(x, a_0, time, sig_g, sig_d, v_gas, T, alpha, m_star, V_FRAG, RHO_S,
         u_dust = impl_donorcell_adv_diff_delta(
             n_r, x, D, v, g, h, K, L, flim, u_in, dt, 1, 1, 0, 0, 0, 0, 1, A0, B0, C0, D0)
 
-        mask = abs(u_dust[2:-1] / u_in[2:-1] - 1) > 0.05
+        mask = abs(u_dust[2:-1] / u_in[2:-1] - 1) > CFL
         #
         # try variable time step
         #
@@ -262,7 +265,7 @@ def run(x, a_0, time, sig_g, sig_d, v_gas, T, alpha, m_star, V_FRAG, RHO_S,
                 sys.exit(1)
             u_dust = impl_donorcell_adv_diff_delta(
                 n_r, x, D, v, g, h, K, L, flim, u_in, dt, 1, 1, 0, 0, 0, 0, 1, A0, B0, C0, D0)
-            mask = abs(u_dust[2:-1] / u_in[2:-1] - 1) > 0.3
+            mask = abs(u_dust[2:-1] / u_in[2:-1] - 1) > CFL
         #
         # update
         #
