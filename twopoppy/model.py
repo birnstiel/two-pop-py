@@ -281,9 +281,15 @@ def run(x, a_0, time, sig_g, sig_d, v_gas, T, alpha, m_star, V_FRAG, RHO_S,
             h_gas = ones(n_r)
             K_gas = zeros(n_r)
             L_gas = zeros(n_r)
-            p_L = -(x[1] - x[0]) * h_gas[1] / (x[1] * g_gas[1])
-            q_L = 1. / x[0] - 1. / x[1] * g_gas[0] / g_gas[1] * h_gas[1] / h_gas[0]
-            r_L = 0.0
+
+            # p_L = -(x[1] - x[0]) * h_gas[1] / (x[1] * g_gas[1])
+            # q_L = 1. / x[0] - 1. / x[1] * g_gas[0] / g_gas[1] * h_gas[1] / h_gas[0]
+            # r_L = 0.0
+
+            p_L = 1.0
+            q_L = - (g_gas[1] / h_gas[1] - g_gas[0] / h_gas[0]) / (x[1] - x[0])
+            r_L = g_gas[0] / h_gas[0] * (u_gas[1] - u_gas[0]) / (x[1] - x[0])
+
             u_gas = impl_donorcell_adv_diff_delta(n_r, x, D_gas, v_gas, g_gas, h_gas, K_gas, L_gas,
                                                   flim, u_gas, dt, p_L, 0.0, q_L, 1.0, r_L, 1e-100 * x[n_r - 1], 1, A0, B0, C0, D0)
             sig_g = u_gas / x
