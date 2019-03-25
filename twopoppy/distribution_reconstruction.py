@@ -215,6 +215,13 @@ def reconstruct_size_distribution(r, a, t, sig_g, sig_d, alpha, rho_s, T, M_star
     a_dr = 0.55 * 2 / pi * sig_d / rho_s * r**2. * \
         (Grav * M_star / r**3) / (abs(gamma) * cs**2)
     #
+    # assume erosion or something else (boundcing?) limits particles to
+    # St = 1
+    # and we treat it like fragmentation
+    #
+    a_St1 = 2.0 * sig_g / (pi * rho_s)
+    a_fr = np.minimum(a_St1, a_fr)
+    #
     # time dependent growth
     #
     t_grow = sig_g / (om * sig_d)
