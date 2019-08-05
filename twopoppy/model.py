@@ -331,12 +331,12 @@ def run(x, a_0, time, sig_g, sig_d, v_gas, T, alpha, m_star, V_FRAG, RHO_S, E_dr
             #
             # store the rest
             #
-            v_0[snap_count, :]      = res[2]  # noqa
-            v_1[snap_count, :]      = res[3]  # noqa
-            a_t[snap_count, :]      = res[4]  # noqa
-            a_df[snap_count, :]     = res[5]  # noqa
-            a_fr[snap_count, :]     = res[6]  # noqa
-            a_dr[snap_count, :]     = res[7]  # noqa
+            v_0[snap_count, :]      = velocities['v_0']     # noqa
+            v_1[snap_count, :]      = velocities['v_1']     # noqa
+            a_t[snap_count, :]      = size_limits['a_max']  # noqa
+            a_df[snap_count, :]     = size_limits['a_df']   # noqa
+            a_fr[snap_count, :]     = size_limits['a_fr']   # noqa
+            a_dr[snap_count, :]     = size_limits['a_dr']   # noqa
             Tout[snap_count, :]     = _T      # noqa
             alphaout[snap_count, :] = _alpha  # noqa
 
