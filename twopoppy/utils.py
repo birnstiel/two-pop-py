@@ -130,6 +130,7 @@ def get_size_limits(t, sigma_d_t, x, sigma_g, v_gas, T, alpha, m_star, a_0, V_FR
         a_fr = a_max         # noqa
         a_dr = a_max         # noqa
         a_df = a_max         # noqa
+        mask_drift = np.zeros_like(a_df, dtype=bool)
     else:
         a_fr_ep = fudge_fr * 2 * sigma_g * V_FRAG**2 / \
             (3 * np.pi * alpha * RHO_S * k_b * T / mu / m_p)
