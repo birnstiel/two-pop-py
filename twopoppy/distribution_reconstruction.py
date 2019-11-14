@@ -221,6 +221,7 @@ def reconstruct_size_distribution(r, a, t, sig_g, sig_d, alpha, rho_s, T, M_star
     #
     a_St1 = 2.0 * sig_g / (pi * rho_s)
     a_fr = np.minimum(a_St1, a_fr)
+    a_dr = np.minimum(a_St1, a_dr)
     #
     # time dependent growth
     #

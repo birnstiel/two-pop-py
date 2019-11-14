@@ -140,11 +140,22 @@ def get_size_limits(t, sigma_d_t, x, sigma_g, v_gas, T, alpha, m_star, a_0, V_FR
             a_fr = np.minimum(a_fr_ep, a_fr_stokes)
         else:
             a_fr = a_fr_ep
+
         a_dr = E_stick * fudge_dr / E_drift * 2 / np.pi * sigma_d_t / RHO_S * \
             x**2 * (Grav * m_star / x**3) / (abs(gamma) * (k_b * T / mu / m_p))
         N = 0.5
         a_df = fudge_fr * 2 * sigma_g / (RHO_S * np.pi) * V_FRAG * np.sqrt(
             Grav * m_star / x) / (abs(gamma) * k_b * T / mu / m_p * (1 - N))
+
+        #
+        # assume erosion or something else (boundcing?) limits particles to
+        # St = 1
+        # and we treat it like fragmentation
+        #
+        a_St1 = 2.0 * sigma_g / (np.pi * RHO_S)
+        a_fr = np.minimum(a_St1, a_fr)
+        a_dr = np.minimum(a_St1, a_dr)
+
         a_max = np.maximum(a_0 * np.ones(n_r), np.minimum(a_dr, a_fr))
 
         ###

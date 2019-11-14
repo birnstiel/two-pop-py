@@ -1,4 +1,5 @@
-def run(x, a_0, time, sig_g, sig_d, v_gas, T, alpha, m_star, V_FRAG, RHO_S, E_drift, E_stick=1., stokesregime=False, nogrowth=False, gasevol=True):
+def run(x, a_0, time, sig_g, sig_d, v_gas, T, alpha, m_star, V_FRAG, RHO_S, E_drift, E_stick=1., stokesregime=False, nogrowth=False, gasevol=True,alpha_gas=None):
+
     """
     This function evolves the two population model (all model settings
     are stored in velocity). It returns the important parameters of
@@ -45,6 +46,9 @@ def run(x, a_0, time, sig_g, sig_d, v_gas, T, alpha, m_star, V_FRAG, RHO_S, E_dr
 
     E_stick : float
         sticking probability            [-]
+
+    alpha_gas : None | array | function
+        if not None: use this for the gas [-]
 
 
     Keywords:
@@ -151,6 +155,7 @@ def run(x, a_0, time, sig_g, sig_d, v_gas, T, alpha, m_star, V_FRAG, RHO_S, E_dr
     a_dr            = zeros([n_t,n_r])  # noqa
     Tout            = zeros([n_t,n_r])  # noqa
     alphaout        = zeros([n_t,n_r])  # noqa
+    alphagasout     = zeros([n_t,n_r])  # noqa
     u_in            = solution_d[0,:]*x # noqa
     it_old          = 1                 # noqa
     snap_count      = 0                 # noqa
@@ -175,6 +180,18 @@ def run(x, a_0, time, sig_g, sig_d, v_gas, T, alpha, m_star, V_FRAG, RHO_S, E_dr
         def alpha_func(x, locals_):
             return alpha
 
+    # the same for alpha_gas
+
+    if alpha_gas is None:
+        alpha_gas = alpha
+
+    if hasattr(alpha_gas, '__call__'):
+        alpha_gas_func = alpha_gas
+    else:
+        def alpha_gas_func(x, locals_):
+            return alpha_gas
+
+
     #
     # save the velocity which will be used
     #
@@ -192,16 +209,17 @@ def run(x, a_0, time, sig_g, sig_d, v_gas, T, alpha, m_star, V_FRAG, RHO_S, E_dr
     velocities = get_velocities_diffusion(x, gamma, v_gas, St_0, St_1, T, o_k, alpha, mask_drift)
 
 
-    v_bar[0, :]    = velocities['v_bar']        # noqa
-    Diff[0, :]     = velocities['D']            # noqa
-    v_0[0, :]      = velocities['v_0']          # noqa
-    v_1[0, :]      = velocities['v_1']          # noqa
-    a_t[0, :]      = size_limits['a_max']       # noqa
-    a_df[0, :]     = size_limits['a_df']        # noqa
-    a_fr[0, :]     = size_limits['a_fr']        # noqa
-    a_dr[0, :]     = size_limits['a_dr']        # noqa
-    Tout[0, :]     = Tfunc(x, locals())         # noqa
-    alphaout[0, :] = alpha_func(x, locals())    # noqa
+    v_bar[0, :]       = velocities['v_bar']         # noqa
+    Diff[0, :]        = velocities['D']             # noqa
+    v_0[0, :]         = velocities['v_0']           # noqa
+    v_1[0, :]         = velocities['v_1']           # noqa
+    a_t[0, :]         = size_limits['a_max']        # noqa
+    a_df[0, :]        = size_limits['a_df']         # noqa
+    a_fr[0, :]        = size_limits['a_fr']         # noqa
+    a_dr[0, :]        = size_limits['a_dr']         # noqa
+    Tout[0, :]        = Tfunc(x, locals())          # noqa
+    alphaout[0, :]    = alpha_func(x, locals())     # noqa
+    alphagasout[0, :] = alpha_gas_func(x, locals()) # noqa
 
     #
     # the loop
@@ -225,6 +243,7 @@ def run(x, a_0, time, sig_g, sig_d, v_gas, T, alpha, m_star, V_FRAG, RHO_S, E_dr
 
         _T = Tfunc(x, locals())
         _alpha = alpha_func(x, locals())
+        _alpha_gas = alpha_gas_func(x, locals())
 
         # calculate the sizes
 
@@ -279,7 +298,7 @@ def run(x, a_0, time, sig_g, sig_d, v_gas, T, alpha, m_star, V_FRAG, RHO_S, E_dr
         # update the gas
         #
         if gasevol:
-            nu_gas = _alpha * k_b * _T / mu / m_p * sqrt(x**3 / Grav / m_star)
+            nu_gas = _alpha_gas * k_b * _T / mu / m_p * sqrt(x**3 / Grav / m_star)
             u_gas_old = sig_g * x
             u_gas = u_gas_old[:]
             v_gas = zeros(n_r)
@@ -339,10 +358,11 @@ def run(x, a_0, time, sig_g, sig_d, v_gas, T, alpha, m_star, V_FRAG, RHO_S, E_dr
             a_dr[snap_count, :]     = size_limits['a_dr']   # noqa
             Tout[snap_count, :]     = _T      # noqa
             alphaout[snap_count, :] = _alpha  # noqa
+            alphagasout[snap_count, :] = _alpha_gas  # noqa
 
     progress_bar(100., 'toy model running')
 
-    return time, solution_d, solution_g, v_bar, vgas, v_0, v_1, a_dr, a_fr, a_df, a_t, Tout, alphaout
+    return time, solution_d, solution_g, v_bar, vgas, v_0, v_1, a_dr, a_fr, a_df, a_t, Tout, alphaout, alphagasout
 
 
 def impl_donorcell_adv_diff_delta(n_x, x, Diff, v, g, h, K, L, flim, u_in, dt, pl, pr, ql, qr, rl, rr, coagulation_method, A, B, C, D):
