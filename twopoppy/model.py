@@ -1,4 +1,4 @@
-def run(x, a_0, time, sig_g, sig_d, v_gas, T, alpha, m_star, V_FRAG, RHO_S, E_drift, E_stick=1., stokesregime=False, nogrowth=False, gasevol=True,alpha_gas=None):
+def run(x, a_0, time, sig_g, sig_d, v_gas, T, alpha, m_star, V_FRAG, RHO_S, E_drift, E_stick=1., stokesregime=False, nogrowth=False, gasevol=True, alpha_gas=None):
 
     """
     This function evolves the two population model (all model settings
@@ -153,6 +153,7 @@ def run(x, a_0, time, sig_g, sig_d, v_gas, T, alpha, m_star, V_FRAG, RHO_S, E_dr
     a_df            = zeros([n_t,n_r])  # noqa
     a_fr            = zeros([n_t,n_r])  # noqa
     a_dr            = zeros([n_t,n_r])  # noqa
+    a_gr            = zeros([n_t,n_r])  # noqa
     Tout            = zeros([n_t,n_r])  # noqa
     alphaout        = zeros([n_t,n_r])  # noqa
     alphagasout     = zeros([n_t,n_r])  # noqa
@@ -216,6 +217,7 @@ def run(x, a_0, time, sig_g, sig_d, v_gas, T, alpha, m_star, V_FRAG, RHO_S, E_dr
     a_t[0, :]         = size_limits['a_max']        # noqa
     a_df[0, :]        = size_limits['a_df']         # noqa
     a_fr[0, :]        = size_limits['a_fr']         # noqa
+    a_gr[0, :]        = size_limits['a_grow']       # noqa
     a_dr[0, :]        = size_limits['a_dr']         # noqa
     Tout[0, :]        = Tfunc(x, locals())          # noqa
     alphaout[0, :]    = alpha_func(x, locals())     # noqa
@@ -249,7 +251,7 @@ def run(x, a_0, time, sig_g, sig_d, v_gas, T, alpha, m_star, V_FRAG, RHO_S, E_dr
 
         size_limits = get_size_limits(t, u_in / x, x, sig_g, v_gas, _T, _alpha, m_star,
                                       a_0, V_FRAG, RHO_S, E_drift, E_stick=E_stick,
-                                      stokesregime=stokesregime, nogrowth=nogrowth)
+                                      stokesregime=stokesregime, nogrowth=nogrowth, a_grow_prev=size_limits['a_grow'])
 
         gamma = size_limits['gamma']
         St_0 = size_limits['St_0']
@@ -356,6 +358,7 @@ def run(x, a_0, time, sig_g, sig_d, v_gas, T, alpha, m_star, V_FRAG, RHO_S, E_dr
             a_df[snap_count, :]     = size_limits['a_df']   # noqa
             a_fr[snap_count, :]     = size_limits['a_fr']   # noqa
             a_dr[snap_count, :]     = size_limits['a_dr']   # noqa
+            a_gr[snap_count, :]     = size_limits['a_grow']   # noqa
             Tout[snap_count, :]     = _T      # noqa
             alphaout[snap_count, :] = _alpha  # noqa
             alphagasout[snap_count, :] = _alpha_gas  # noqa

@@ -2,7 +2,7 @@ from .const import k_b, mu, m_p, Grav, sig_h2
 import numpy as np
 
 
-def get_size_limits(t, sigma_d_t, x, sigma_g, v_gas, T, alpha, m_star, a_0, V_FRAG, RHO_S, E_drift, stokesregime=False, E_stick=1., nogrowth=False):
+def get_size_limits(t, sigma_d_t, x, sigma_g, v_gas, T, alpha, m_star, a_0, V_FRAG, RHO_S, E_drift, stokesregime=False, E_stick=1., nogrowth=False, a_grow_prev=None):
     """
     This model takes a snapshot of temperature, gas surface density and so on
     and calculates the representative sizes which are
@@ -65,6 +65,9 @@ def get_size_limits(t, sigma_d_t, x, sigma_g, v_gas, T, alpha, m_star, a_0, V_FR
 
     stokes : bool
         true: consinder both Epstein and Stokes regime [False]
+
+    a_grow_prev : None | array
+        to fix the growth limit from decreasing, the previous size can be passed
 
     Returns:
     --------
@@ -171,6 +174,10 @@ def get_size_limits(t, sigma_d_t, x, sigma_g, v_gas, T, alpha, m_star, a_0, V_FR
         #
         tau_grow = sigma_g / np.maximum(1e-100, E_stick * sigma_d_t * o_k)
         a_grow = a_0 * np.exp(np.minimum(709.0, t / tau_grow))
+
+        if a_grow_prev is not None:
+            a_grow = np.maximum(a_grow, a_grow_prev)
+
         a_max_t = np.minimum(a_max, a_grow)
         a_max_t_out = np.minimum(a_max_out, a_grow)
 
