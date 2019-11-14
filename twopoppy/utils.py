@@ -159,9 +159,9 @@ def get_size_limits(t, sigma_d_t, x, sigma_g, v_gas, T, alpha, m_star, a_0, V_FR
         # calculate the growth time scale and thus a_1(t)
         #
         tau_grow = sigma_g / np.maximum(1e-100, E_stick * sigma_d_t * o_k)
-        a_max_t = np.minimum(a_max, a_0 * np.exp(np.minimum(709.0, t / tau_grow)))
-        a_max_t_out = np.minimum(
-            a_max_out, a_0 * np.exp(np.minimum(709.0, t / tau_grow)))
+        a_grow = a_0 * np.exp(np.minimum(709.0, t / tau_grow))
+        a_max_t = np.minimum(a_max, a_grow)
+        a_max_t_out = np.minimum(a_max_out, a_grow)
 
     #
     # calculate the Stokes number of the particles
@@ -176,6 +176,7 @@ def get_size_limits(t, sigma_d_t, x, sigma_g, v_gas, T, alpha, m_star, a_0, V_FR
         'a_df': a_df,
         'a_fr': a_fr,
         'a_dr': a_dr,
+        'a_grow': a_grow,
         'mask_drift': mask_drift,
         'gamma': gamma,
         'o_k': o_k,
