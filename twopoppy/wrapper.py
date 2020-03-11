@@ -347,7 +347,7 @@ def model_wrapper(ARGS, plot=False, save=False):
 
     if isinstance(alpha, (list, tuple, np.ndarray)):
         def alpha_fct(x, locals_):
-            return alpha
+            return ARGS.alpha
         print('alpha given as array, ignoring gamma index when setting alpha')
     elif hasattr(alpha, '__call__'):
         alpha_fct = alpha
@@ -377,9 +377,8 @@ def model_wrapper(ARGS, plot=False, save=False):
     sigma_d = sigma_g * d2g
 
     # call the model
-
-    TI, SOLD, SOLG, VD, VG, v_0, v_1, a_dr, a_fr, a_df, a_t, Tout, alphaout = model.run(
-        x, a0, timesteps, sigma_g, sigma_d, v_gas, T, alpha_fct, mstar, vfrag, rhos, edrift, E_stick=estick, nogrowth=False, gasevol=gasevol)
+    TI, SOLD, SOLG, VD, VG, v_0, v_1, a_dr, a_fr, a_df, a_t, Tout, alphaout, _ = model.run(
+        x, a0, timesteps, sigma_g, sigma_d, v_gas, T, alpha_fct(x, locals()), mstar, vfrag, rhos, edrift, E_stick=estick, nogrowth=False, gasevol=gasevol)
 
     #
     # ================================
