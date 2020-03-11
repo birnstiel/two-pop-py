@@ -2,7 +2,7 @@ from .const import k_b, mu, m_p, Grav, sig_h2
 import numpy as np
 
 
-def get_size_limits(t, sigma_d_t, x, sigma_g, v_gas, T, alpha, m_star, a_0, V_FRAG, RHO_S, E_drift, stokesregime=False, E_stick=1., nogrowth=False, a_grow_prev=None):
+def get_size_limits(t, sigma_d_t, x, sigma_g, v_gas, T, alpha, m_star, a_0, V_FRAG, RHO_S, E_drift, stokesregime=False, E_stick=1., nogrowth=False, a_grow_prev=None, dt=None):
     """
     This model takes a snapshot of temperature, gas surface density and so on
     and calculates the representative sizes which are
@@ -68,6 +68,9 @@ def get_size_limits(t, sigma_d_t, x, sigma_g, v_gas, T, alpha, m_star, a_0, V_FR
 
     a_grow_prev : None | array
         to fix the growth limit from decreasing, the previous size can be passed
+
+    dt : None | float
+        to treat the evolution of the growth limit better, the time step can be passed
 
     Returns:
     --------
@@ -149,6 +152,7 @@ def get_size_limits(t, sigma_d_t, x, sigma_g, v_gas, T, alpha, m_star, a_0, V_FR
         N = 0.5
         a_df = fudge_fr * 2 * sigma_g / (RHO_S * np.pi) * V_FRAG * np.sqrt(
             Grav * m_star / x) / (abs(gamma) * k_b * T / mu / m_p * (1 - N))
+        a_df = np.maximum(a_0, a_df)
 
         #
         # assume erosion or something else (boundcing?) limits particles to
@@ -163,7 +167,7 @@ def get_size_limits(t, sigma_d_t, x, sigma_g, v_gas, T, alpha, m_star, a_0, V_FR
 
         ###
         # EXPERIMENTAL: inlcude a_df as upper limit
-        a_max = np.maximum(a_0 * np.ones(n_r), np.minimum(a_df, a_max))
+        a_max = np.maximum(a_0, np.minimum(a_df, a_max))
         a_max_out = np.minimum(a_df, a_max)
         # mask      = all([a_dr<a_fr,a_dr<a_df],0)
         mask_drift = np.array([adr < afr and adr < adf for adr, afr, adf in zip(a_dr, a_fr, a_df)])
@@ -172,11 +176,14 @@ def get_size_limits(t, sigma_d_t, x, sigma_g, v_gas, T, alpha, m_star, a_0, V_FR
         #
         # calculate the growth time scale and thus a_1(t)
         #
-        tau_grow = sigma_g / np.maximum(1e-100, E_stick * sigma_d_t * o_k)
-        a_grow = a_0 * np.exp(np.minimum(709.0, t / tau_grow))
+        tau_grow = sigma_g / np.maximum(1e-100, E_stick * sigma_d_t * o_k)  # this is the original
+        a_grow = a_0 * np.exp(np.minimum(709.0, t / tau_grow))  # this assumes growth always with the current time scale
 
-        if a_grow_prev is not None:
-            a_grow = np.maximum(a_grow, a_grow_prev)
+        if a_grow_prev is not None and dt is not None:
+            # here we increase the previous growth limit with the current
+            # growth time scale
+
+            a_grow = a_grow_prev * np.exp(np.minimum(709.0, dt / tau_grow))
 
         a_max_t = np.minimum(a_max, a_grow)
         a_max_t_out = np.minimum(a_max_out, a_grow)
