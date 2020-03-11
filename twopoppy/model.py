@@ -117,7 +117,7 @@ def run(x, a_0, time, sig_g, sig_d, v_gas, T, alpha, m_star, V_FRAG, RHO_S, E_dr
         def T(x,locals_):
             return 200*(x/AU)**-1
     """
-    from numpy import ones, zeros, Inf, maximum, minimum, sqrt, where
+    from numpy import ones, zeros, maximum, minimum, sqrt, where
     from .const import year, Grav, k_b, mu, m_p
     from .utils import get_size_limits, get_velocities_diffusion
     import sys
@@ -226,7 +226,7 @@ def run(x, a_0, time, sig_g, sig_d, v_gas, T, alpha, m_star, V_FRAG, RHO_S, E_dr
     #
     # the loop
     #
-    dt = Inf
+    dt = 10 * year
     while t < time[-1]:
         #
         # set the time step
@@ -279,13 +279,13 @@ def run(x, a_0, time, sig_g, sig_d, v_gas, T, alpha, m_star, V_FRAG, RHO_S, E_dr
         u_dust = impl_donorcell_adv_diff_delta(
             n_r, x, D, v, g, h, K, L, flim, u_in, dt, 1, 1, 0, 0, 0, 0, 1, A0, B0, C0, D0)
 
-        mask = abs(u_dust[2:-1] / u_in[2:-1] - 1) > 0.05
+        mask = abs(u_dust[2:-1] / u_in[2:-1] - 1) > 2
         #
         # try variable time step
         #
         while any(u_dust[2:-1][mask] / x[2:-1][mask] >= 1e-30):
             dt = dt / 10.
-            if dt < 1.0 and snap_count > 0:
+            if dt < year and snap_count > 0:
                 print('ERROR: time step got too short')
                 sys.exit(1)
             u_dust = impl_donorcell_adv_diff_delta(
