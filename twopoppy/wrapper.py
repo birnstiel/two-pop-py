@@ -249,7 +249,7 @@ def lbp_solution(R, gamma, nu1, mstar, mdisk, RC0, time=0):
 
     # calculate the surface density
 
-    sig_g = C / (3 * np.pi * nu1 * r) * T1**(-(5. / 2. - gamma) / (2. - gamma)) * np.exp(-(r**(2. - gamma)) / T1)
+    sig_g = C / (3 * np.pi * nu1 * r**gamma) * T1**(-(5. / 2. - gamma) / (2. - gamma)) * np.exp(-(r**(2. - gamma)) / T1)
 
     if units:
         return sig_g, RC1
