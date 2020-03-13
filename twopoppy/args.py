@@ -3,30 +3,31 @@ class args:
 
     # names of all parameters
 
-    varlist = [ ['nr',        int],  # noqa
-                ['nt',        int],  # noqa
-                ['tmax',    float],  # noqa
-                ['alpha',   float],  # noqa
-                ['d2g',     float],  # noqa
-                ['mstar',   float],  # noqa
-                ['tstar',   float],  # noqa
-                ['rstar',   float],  # noqa
-                ['rc',      float],  # noqa
-                ['rt',      float],  # noqa
-                ['r0',      float],  # noqa
-                ['r1',      float],  # noqa
-                ['mdisk',   float],  # noqa
-                ['rhos',    float],  # noqa
-                ['vfrag',   float],  # noqa
-                ['a0',      float],  # noqa
-                ['gamma',   float],  # noqa
-                ['edrift',  float],  # noqa
-                ['estick',  float],  # noqa
-                ['T',       float],  # noqa
-                ['gasevol',  bool],  # noqa
-                ['tempevol', bool],  # noqa
-                ['starevol', bool],  # noqa
-                ['dir',      str],  # noqa
+    varlist = [ ['nr',             int],  # noqa
+                ['nt',             int],  # noqa
+                ['tmax',         float],  # noqa
+                ['alpha',        float],  # noqa
+                ['d2g',          float],  # noqa
+                ['mstar',        float],  # noqa
+                ['tstar',        float],  # noqa
+                ['rstar',        float],  # noqa
+                ['rc',           float],  # noqa
+                ['rt',           float],  # noqa
+                ['r0',           float],  # noqa
+                ['r1',           float],  # noqa
+                ['mdisk',        float],  # noqa
+                ['rhos',         float],  # noqa
+                ['vfrag',        float],  # noqa
+                ['a0',           float],  # noqa
+                ['gamma',        float],  # noqa
+                ['edrift',       float],  # noqa
+                ['estick',       float],  # noqa
+                ['stokesregime',  bool],  # noqa
+                ['T',            float],  # noqa
+                ['gasevol',       bool],  # noqa
+                ['tempevol',      bool],  # noqa
+                ['starevol',      bool],  # noqa
+                ['dir',           str],  # noqa
             ]
 
     # set default values
@@ -52,11 +53,12 @@ class args:
     edrift  = 1.0               # noqa
     estick  = 1.0               # noqa
 
-    gasevol  = True   # noqa
-    tempevol = False  # noqa
-    starevol = False  # noqa
-    T        = None   # noqa
-    dir      = 'data' # noqa
+    stokesregime = False  # noqa
+    gasevol      = True   # noqa
+    tempevol     = False  # noqa
+    starevol     = False  # noqa
+    T            = None   # noqa
+    dir          = 'data' # noqa
 
     def __init__(self, **kwargs):
         """
@@ -115,9 +117,10 @@ class args:
         # print other arguments
 
         s += 'Output directory '.ljust(17) + ' = ' + self.dir.rjust(15) + '\n'
-        s += 'Gas         evol.'.ljust(17) + ' = ' + (self.gasevol * 'on' + (not self.gasevol) * 'off').rjust(15) + '\n'
-        s += 'Temperature evol.'.ljust(17) + ' = ' + (self.tempevol * 'on' + (not self.tempevol) * 'off').rjust(15) + '\n'
-        s += 'Stellar     evol.'.ljust(17) + ' = ' + (self.starevol * 'on' + (not self.starevol) * 'off').rjust(15) + '\n'
+        s += 'Stokes regime    '.ljust(17) + ' = ' + (self.stokesregime * 'on' + (not self.stokesregime) * 'off').rjust(15) + '\n'
+        s += 'Gas         evol.'.ljust(17) + ' = ' + (self.gasevol * 'on'      + (not self.gasevol)      * 'off').rjust(15) + '\n'
+        s += 'Temperature evol.'.ljust(17) + ' = ' + (self.tempevol * 'on'     + (not self.tempevol)     * 'off').rjust(15) + '\n'
+        s += 'Stellar     evol.'.ljust(17) + ' = ' + (self.starevol * 'on'     + (not self.starevol)     * 'off').rjust(15) + '\n'
 
         # print temperature
 
@@ -205,10 +208,10 @@ class args:
                     try:
                         # plain values
                         setattr(self, name, t(val))
-                    except:
+                    except Exception:
                         try:
                             setattr(self, name, val)
-                        except:
+                        except Exception:
                             print('Could not convert variable \'{}\' with stored value {}'.format(name, t(val)))
 
             else:

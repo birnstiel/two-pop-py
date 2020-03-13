@@ -235,8 +235,8 @@ def reconstruct_size_distribution(r, a, t, sig_g, sig_d, alpha, rho_s, T, M_star
     # transition to turblent velocities
     #
     Re = alpha * sig_g * sig_h2 / (2 * mu * m_p)
-    a_bt = (8 * sig_g / (pi * rho_s) * Re**-0.25 * np.sqrt(mu *
-                                                           m_p / (3 * pi * alpha)) * (4 * pi / 3 * rho_s)**-0.5)**0.4
+    a_bt = (8 * sig_g / (pi * rho_s) * Re**-0.25 * np.sqrt(
+        mu * m_p / (3 * pi * alpha)) * (4 * pi / 3 * rho_s)**-0.5)**0.4
     #
     # apply the reconstruction recipes
     #
@@ -389,7 +389,7 @@ def reconstruct_size_distribution(r, a, t, sig_g, sig_d, alpha, rho_s, T, M_star
         mask &= np.invert(np.isnan(pd_est))
         if len(pd_est[mask]) != 0:
             inte = cumtrapz(pd_est[mask], x=np.log10(r[mask]), initial=0)
-            if inte[-1]!=0:
+            if inte[-1] != 0:
                 inte /= np.abs(inte).max()
             sol = np.exp(inte)
             sol = sol / np.interp(ra, r[mask], sol) * _sigd
@@ -408,8 +408,7 @@ def reconstruct_size_distribution(r, a, t, sig_g, sig_d, alpha, rho_s, T, M_star
             mask[ir + 1:next_frag + 1] = True
             A = a[ia] * rho_s * pi * gamma[ir] / \
                 (2 * alpha[ir] * _sigg * p[ir])
-            sol2 = np.maximum(sig_3[ia, mask], _sigd *
-                              np.exp(A * ((r[mask] / ra)**p[mask] - 1.)))
+            sol2 = np.maximum(sig_3[ia, mask], _sigd * np.exp(A * ((r[mask] / ra)**p[mask] - 1.)))
             #
             # make sure this diffusion is not increasing
             #
@@ -419,7 +418,7 @@ def reconstruct_size_distribution(r, a, t, sig_g, sig_d, alpha, rho_s, T, M_star
             else:
                 mask_idx = mask_idx[0]
             mask &= (np.arange(n_r) <= np.arange(n_r)[mask][mask_idx])
-            sig_3[ia, mask] = np.minimum(_sigd,sol2[:mask_idx + 1])
+            sig_3[ia, mask] = np.minimum(_sigd, sol2[:mask_idx + 1])
 
     sig_3[np.isnan(sig_3)] = floor
     #
@@ -463,7 +462,7 @@ def reconstruct_size_distribution(r, a, t, sig_g, sig_d, alpha, rho_s, T, M_star
             else:
                 pwl = np.log(sig_3[imax, ir] / sig_3[i_full, ir]
                              ) / np.log(a[imax] / a[i_full])
-                pwl = max(3,pwl)
+                pwl = max(3, pwl)
 
         sig_3[:i_full, ir] = sig_3[i_full, ir] * (a[:i_full] / a[i_full])**pwl
     #
@@ -527,8 +526,7 @@ def reconstruct_size_distribution(r, a, t, sig_g, sig_d, alpha, rho_s, T, M_star
             kernel_r = np.exp(-(r[ir0:ir1 + 1] - r[ir])**2 / (2 * sig_r[ia]**2))
             kernel = np.outer(kernel_a, kernel_r)
             kernel = kernel / \
-                np.trapz(2 * pi * r[ir0:ir1 + 1] *
-                         kernel.sum(0), x=r[ir0:ir1 + 1])
+                np.trapz(2 * pi * r[ir0:ir1 + 1] * kernel.sum(0), x=r[ir0:ir1 + 1])
             #
             # apply the smoothing
             #

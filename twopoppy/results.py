@@ -28,7 +28,6 @@ class results:
         """
         import os
         import numpy as np
-        from . import model
 
         if dirname is None:
             dirname = self.args.dir

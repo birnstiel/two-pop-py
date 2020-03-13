@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-"""
+r"""
 -------------------------------------------------------------------------------
          _____ _    _  _____       ______ ___________      ________   __
         |_   _| |  | ||  _  |      | ___ \  _  | ___ \     | ___ \ \ / /
@@ -121,7 +121,7 @@ def get_compression_type(filename):
             if file_start.startswith(magic):
                 return filetype
         return "no match"
-    except:
+    except Exception:
         # use the file ending
         d = dict(zip([l[1] for l in compressors.values()], compressors.keys()))
         ext = os.path.splitext(filename)[1][1:]
@@ -287,30 +287,31 @@ def model_wrapper(ARGS, plot=False, save=False):
     #
     # set parameters according to input
     #
-    nr       = ARGS.nr          # noqa
-    nt       = ARGS.nt          # noqa
-    tmax     = ARGS.tmax        # noqa
-    n_a      = ARGS.na          # noqa
-    alpha    = ARGS.alpha       # noqa
-    d2g      = ARGS.d2g         # noqa
-    mstar    = ARGS.mstar       # noqa
-    tstar    = ARGS.tstar       # noqa
-    rstar    = ARGS.rstar       # noqa
-    rc       = ARGS.rc          # noqa
-    rt       = ARGS.rt          # noqa
-    r0       = ARGS.r0          # noqa
-    r1       = ARGS.r1          # noqa
-    mdisk    = ARGS.mdisk       # noqa
-    rhos     = ARGS.rhos        # noqa
-    vfrag    = ARGS.vfrag       # noqa
-    a0       = ARGS.a0          # noqa
-    gamma    = ARGS.gamma       # noqa
-    edrift   = ARGS.edrift      # noqa
-    estick   = ARGS.estick      # noqa
-    gasevol  = ARGS.gasevol     # noqa
-    tempevol = ARGS.tempevol    # noqa
-    starevol = ARGS.starevol    # noqa
-    T        = ARGS.T           # noqa
+    nr           = ARGS.nr            # noqa
+    nt           = ARGS.nt            # noqa
+    tmax         = ARGS.tmax          # noqa
+    n_a          = ARGS.na            # noqa
+    alpha        = ARGS.alpha         # noqa
+    d2g          = ARGS.d2g           # noqa
+    mstar        = ARGS.mstar         # noqa
+    tstar        = ARGS.tstar         # noqa
+    rstar        = ARGS.rstar         # noqa
+    rc           = ARGS.rc            # noqa
+    rt           = ARGS.rt            # noqa
+    r0           = ARGS.r0            # noqa
+    r1           = ARGS.r1            # noqa
+    mdisk        = ARGS.mdisk         # noqa
+    rhos         = ARGS.rhos          # noqa
+    vfrag        = ARGS.vfrag         # noqa
+    a0           = ARGS.a0            # noqa
+    gamma        = ARGS.gamma         # noqa
+    edrift       = ARGS.edrift        # noqa
+    estick       = ARGS.estick        # noqa
+    gasevol      = ARGS.gasevol       # noqa
+    tempevol     = ARGS.tempevol      # noqa
+    starevol     = ARGS.starevol      # noqa
+    stokesregime = ARGS.stokesregime  # noqa
+    T            = ARGS.T             # noqa
     #
     # print setup
     #
@@ -362,7 +363,7 @@ def model_wrapper(ARGS, plot=False, save=False):
         nu1 = alpha_fct(x, locals()) * cs1**2 / om1
         sigma_g, _ = lbp_solution(x, gamma, nu1, mstar, mdisk, rc)
         v_gas = -3.0 * alpha_fct(x, locals()) * k_b * T / mu / m_p / 2. / np.sqrt(Grav * mstar / x) * (1. + 7. / 4.)
-    except:
+    except Exception:
         sigma_g = mdisk * (2. - gamma) / (2. * np.pi * rc**2) * (x / rc)**-gamma * np.exp(-(x / rc)**(2. - gamma))
         v_gas = np.zeros(sigma_g.shape)
 
@@ -378,8 +379,9 @@ def model_wrapper(ARGS, plot=False, save=False):
 
     # call the model
 
-    TI, SOLD, SOLG, VD, VG, v_0, v_1, a_dr, a_fr, a_df, a_t, Tout, alphaout, _ = model.run(
-        x, a0, timesteps, sigma_g, sigma_d, v_gas, T, alpha_fct, mstar, vfrag, rhos, edrift, E_stick=estick, nogrowth=False, gasevol=gasevol)
+    TI, SOLD, SOLG, VD, VG, v_0, v_1, a_dr, a_fr, a_df, a_t, a_gr, Tout, alphaout, alphagasout = model.run(
+        x, a0, timesteps, sigma_g, sigma_d, v_gas, T, alpha_fct, mstar, vfrag, rhos, edrift,
+        stokesregime=stokesregime, E_stick=estick, nogrowth=False, gasevol=gasevol)
 
     #
     # ================================
@@ -457,7 +459,7 @@ def model_wrapper(ARGS, plot=False, save=False):
             # evolution of the surface density
             #
             plotter(x=x / AU, data=SOLD, data2=SOLG, times=TI / year, xlog=1, ylog=1,
-                    xlim=[0.5, 500], ylim=[2e-5, 2e5], xlabel='r [AU]', i_start=0, ylabel='$\Sigma_d$ [g cm $^{-2}$]')
+                    xlim=[0.5, 500], ylim=[2e-5, 2e5], xlabel='r [AU]', i_start=0, ylabel=r'$\Sigma_d$ [g cm $^{-2}$]')
 
         except ImportError:
             print('Could not import GUI, will not plot GUI')
@@ -473,7 +475,7 @@ def model_wrapper(ARGS, plot=False, save=False):
         ax.set_ylabel('particle size [cm]')
         cb = plt.colorbar(cc)
         cb.set_ticks(np.arange(mx - 10, mx + 1))
-        cb.set_label('$a\cdot\Sigma_\mathrm{d}(r,a)$ [g cm$^{-2}$]')
+        cb.set_label(r'$a\cdot\Sigma_\mathrm{d}(r,a)$ [g cm$^{-2}$]')
 
         plt.show()
 
@@ -541,5 +543,5 @@ def model_wrapper_test_plot(res):
     axs[1].set_ylim(1e-5, 1e5)
     for ax in axs:
         ax.set_xlabel('r [AU]')
-        ax.set_ylabel('$\Sigma_\mathrm{g}$ [g cm$^{-2}$]')
+        ax.set_ylabel(r'$\Sigma_\mathrm{g}$ [g cm$^{-2}$]')
     return f
