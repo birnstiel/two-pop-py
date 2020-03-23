@@ -103,8 +103,8 @@ def get_size_limits(t, sigma_d_t, x, sigma_g, v_gas, T, alpha, m_star, a_0, V_FR
         keplerian frequency
 
     """
-    fudge_fr = 0.75
-    fudge_dr = 0.97
+    fudge_fr = 0.37
+    fudge_dr = 0.55
 
     n_r = len(x)
     #
